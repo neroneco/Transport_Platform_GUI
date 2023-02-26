@@ -126,12 +126,12 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     ImGui::SliderFloat("History",&history,1,30,"%.1f s",ImGuiSliderFlags_None);
 
     static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
-    printf("%d\n",waiting_packet_num);
+    //printf("%d\n",waiting_packet_num);
     if(sdata_1.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_1", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Pitch", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-6,6);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
             ImPlot::PlotLine("Mouse Y", &sdata_1.Data[0].x, &sdata_1.Data[0].y, sdata_1.Data.size(), 0, sdata_1.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
@@ -142,7 +142,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
         if (ImPlot::BeginPlot("##Scrolling_2", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Roll", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-6,6);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
             ImPlot::PlotLine("Mouse Y", &sdata_2.Data[0].x, &sdata_2.Data[0].y, sdata_2.Data.size(), 0, sdata_2.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
@@ -152,7 +152,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
         if (ImPlot::BeginPlot("##Scrolling_3", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Cart 1 position", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-6,6);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
             ImPlot::PlotLine("Mouse Y", &sdata_3.Data[0].x, &sdata_3.Data[0].y, sdata_3.Data.size(), 0, sdata_3.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
@@ -163,7 +163,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
         if (ImPlot::BeginPlot("##Scrolling_4", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Cart 2 position", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-6,6);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
             ImPlot::PlotLine("Mouse Y", &sdata_4.Data[0].x, &sdata_4.Data[0].y, sdata_4.Data.size(), 0, sdata_4.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
@@ -194,22 +194,22 @@ void UART_communication(void)
                         break;
                     }
                     if(read_port(port, (uint8_t*)(Pitch+(60*UART_iter)), 240) != 240){
-                        printf("Error in READ from serial port\n");
+                        printf("Error in READ from serial port 1\n");
                         UART = 0;
                         break;
                     }
                     if(read_port(port, (uint8_t*)(Roll+(60*UART_iter)), 240) != 240){
-                        printf("Error in READ from serial port\n");
+                        printf("Error in READ from serial port 2\n");
                         UART = 0;
                         break;
                     }
                     if(read_port(port, (uint8_t*)(Cart_dist_1+(60*UART_iter)), 240) != 240){
-                        printf("Error in READ from serial port\n");
+                        printf("Error in READ from serial port 3\n");
                         UART = 0;
                         break;
                     }
                     if(read_port(port, (uint8_t*)(Cart_dist_2+(60*UART_iter)), 240) != 240){
-                        printf("Error in READ from serial port\n");
+                        printf("Error in READ from serial port 4\n");
                         UART = 0;
                         break;
                     }
@@ -295,7 +295,7 @@ int main()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
+    
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
