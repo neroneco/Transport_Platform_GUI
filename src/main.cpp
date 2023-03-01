@@ -21,11 +21,13 @@
 static int window_width = 0;
 static int window_height = 0;
 
+uint32_t cart_speed = 10;
+
 // UART 
 static bool end_thread_01 = 0;
 static bool UART = 0;
 static bool new_data_ready = 0;
-const char* device = "\\\\.\\COM3";
+static char* device = "\\\\.\\COM3";
 uint32_t baud_rate = 900000;
 
 static int UART_iter = 0;
@@ -126,7 +128,6 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     ImGui::SliderFloat("History",&history,1,30,"%.1f s",ImGuiSliderFlags_None);
 
     static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
-    //printf("%d\n",waiting_packet_num);
     if(sdata_1.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_1", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Pitch", flags, flags);
@@ -370,9 +371,9 @@ int main()
             static int counter = 0;
 
 
-            // Figures                                                
-            ImGui::SetNextWindowSize(ImVec2(840,580));
-            ImGui::SetNextWindowPos(ImVec2(10,10));
+            // Figures window                                                
+            //ImGui::SetNextWindowSize(ImVec2(840,580));
+            //ImGui::SetNextWindowPos(ImVec2(10,10));
             ImGui::Begin("Figures",NULL,  ImGuiWindowFlags_NoResize  |
                                           ImGuiWindowFlags_NoMove    |
                                           ImGuiWindowFlags_NoCollapse ); // Create a window called "Hello, world!" and append into it.
@@ -396,14 +397,71 @@ int main()
 
             // UART window
             ImGui::Begin("Serial Comunication",NULL,ImGuiWindowFlags_None);
-            ImGui::Checkbox("UART", &UART);
+            ImGui::SeparatorText("UART configuration");
+            ImGui::LabelText("label", "Value");
+            // Baud rate setup
+            static char buf_uart[66] = "";
+            sprintf(buf_uart,"%d",baud_rate); 
+            ImGui::InputText("baud rate",buf_uart, 64, ImGuiInputTextFlags_CharsDecimal);
+            try {
+                baud_rate = std::stoi(buf_uart);
+            } catch(std::invalid_argument& e) {
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                baud_rate = 0;
+            }
+            // COM port setup
+            static char buf_com[66] = "";
+            sprintf(buf_com,device);
+            ImGui::InputText("device port",buf_com, 64, ImGuiInputTextFlags_CharsDecimal);
+            try {
+
+            } catch(std::invalid_argument& e) {
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                baud_rate = 0;
+            }
+
+            // UART enable
+            ImGui::Checkbox("UART Enable", &UART);
             ImGui::End();
 
+            // Cart control window
+            ImGui::Begin("Cart control",NULL,ImGuiWindowFlags_None);
+            static int ctrl_mod = 0;
+            if (ImGui::Combo("Control mode", &ctrl_mod, "Automatic\0Manual\0"))
+            {
+                switch (ctrl_mod)
+                {
+                case 0: ; break;
+                case 1: ; break;
+                }
+            }
+            if (ctrl_mod == 1) {
+                ImGui::SeparatorText("Motor configuration");
+                static char buf_cart[66] = "";
+                sprintf(buf_cart,"%d",cart_speed); 
+                ImGui::InputText("cart speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+                    cart_speed = std::stoi(buf_cart);
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    cart_speed = 10;
+                }
+                if (ImGui::Button("JOG +",ImVec2(50,50)))
+                {
+                    // do JOG +
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("JOG -",ImVec2(50,50)))
+                {
+                    // do JOG -
+                }
+            }
+            ImGui::End();
 
             // Help window
             ImGui::Begin("Help",NULL,ImGuiWindowFlags_None); 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("ImGui Demo Window", &show_demo_ImGuiWindow);      // Edit bools storing our window open/close state
+            ImGui::Text("This is some useful text.");                         // Display some text (you can use a format strings too)
+            ImGui::Checkbox("ImGui Demo Window", &show_demo_ImGuiWindow);     // Edit bools storing our window open/close state
             ImGui::Checkbox("ImPlot Demo Window", &show_demo_ImPlotWindow);
             ImGui::Checkbox("Another Window", &show_another_window);
 
