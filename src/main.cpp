@@ -17,8 +17,8 @@
 #include "linmath.h"
 #include "uart.h"
 
-#define PACKET_LEN_u8   240U
-#define PACKET_LEN_f32  60U
+#define PACKET_LEN_u8   (240U/3)
+#define PACKET_LEN_f32   (60U/3)
 
 static int window_width = 0;
 static int window_height = 0;
@@ -80,7 +80,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static int iter = 0;
     static int offset = 0;
 
-    offset = offset % 10; // TODO change offset to vary depending on desired time
+    offset = offset % 30; // TODO change offset to vary depending on desired time
     iter   = iter % PACKET_LEN_f32;
 
     if( waiting_packet_num > 0){
@@ -188,7 +188,7 @@ void UART_communication(void)
                 }
 
                 while(UART){
-                    UART_iter = UART_iter % 10; 
+                    UART_iter = UART_iter % 30; // TODO change ofset of UART iteration  
                     static uint8_t TX = 'x';
                     PurgeComm(port, PURGE_RXCLEAR);
                     if(write_port(port, &TX, 1)!=0){
