@@ -17,6 +17,8 @@
 #include "linmath.h"
 #include "uart.h"
 
+#define PACKET_LEN_u8   240U
+#define PACKET_LEN_f32  60U
 
 static int window_width = 0;
 static int window_height = 0;
@@ -78,44 +80,44 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static int iter = 0;
     static int offset = 0;
 
-    offset = offset % 10;
-    iter   = iter % 60;
+    offset = offset % 10; // TODO change offset to vary depending on desired time
+    iter   = iter % PACKET_LEN_f32;
 
     if( waiting_packet_num > 0){
         if((waiting_packet_num > 1) && ((iter % 7) == 0)){
-            if(iter<59){
+            if(iter<(PACKET_LEN_f32-1)){
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(60*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(60*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(60*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(60*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
                 iter++;
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(60*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(60*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(60*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(60*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
                 iter++;
-            }else if(iter == 59){
+            }else if(iter == (PACKET_LEN_f32-1)){
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(60*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(60*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(60*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(60*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
                 iter++;
             }
-            if(iter == 60){
+            if(iter == PACKET_LEN_f32){
                 waiting_packet_num--;
                 offset++;
-            }         
+            }
         } else {
             t += ImGui::GetIO().DeltaTime;
-            sdata_1.AddPoint(t, y_data_1[iter+(60*offset)]);
-            sdata_2.AddPoint(t, y_data_2[iter+(60*offset)]);
-            sdata_3.AddPoint(t, y_data_3[iter+(60*offset)]);
-            sdata_4.AddPoint(t, y_data_4[iter+(60*offset)]);
+            sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
+            sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
+            sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
+            sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
             iter++;
-            if(iter == 60){
+            if(iter == PACKET_LEN_f32){
                 waiting_packet_num--;
                 offset++;
             }
@@ -177,7 +179,6 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
 
 void UART_communication(void)
 {
-    static int pack_len = 240;
     while(!end_thread_01){
         if(UART){
                 HANDLE port = open_serial_port(device, baud_rate);
@@ -195,22 +196,22 @@ void UART_communication(void)
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Pitch+(60*UART_iter)), pack_len) != pack_len){
+                    if(read_port(port, (uint8_t*)(Pitch+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
                         printf("Error in READ from serial port 1\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Roll+(60*UART_iter)), pack_len) != pack_len){
+                    if(read_port(port, (uint8_t*)(Roll+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
                         printf("Error in READ from serial port 2\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Cart_dist_1+(60*UART_iter)), pack_len) != pack_len){
+                    if(read_port(port, (uint8_t*)(Cart_dist_1+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
                         printf("Error in READ from serial port 3\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Cart_dist_2+(60*UART_iter)), pack_len) != pack_len){
+                    if(read_port(port, (uint8_t*)(Cart_dist_2+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
                         printf("Error in READ from serial port 4\n");
                         UART = 0;
                         break;
