@@ -177,6 +177,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
 
 void UART_communication(void)
 {
+    static int pack_len = 240;
     while(!end_thread_01){
         if(UART){
                 HANDLE port = open_serial_port(device, baud_rate);
@@ -194,22 +195,22 @@ void UART_communication(void)
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Pitch+(60*UART_iter)), 240) != 240){
+                    if(read_port(port, (uint8_t*)(Pitch+(60*UART_iter)), pack_len) != pack_len){
                         printf("Error in READ from serial port 1\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Roll+(60*UART_iter)), 240) != 240){
+                    if(read_port(port, (uint8_t*)(Roll+(60*UART_iter)), pack_len) != pack_len){
                         printf("Error in READ from serial port 2\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Cart_dist_1+(60*UART_iter)), 240) != 240){
+                    if(read_port(port, (uint8_t*)(Cart_dist_1+(60*UART_iter)), pack_len) != pack_len){
                         printf("Error in READ from serial port 3\n");
                         UART = 0;
                         break;
                     }
-                    if(read_port(port, (uint8_t*)(Cart_dist_2+(60*UART_iter)), 240) != 240){
+                    if(read_port(port, (uint8_t*)(Cart_dist_2+(60*UART_iter)), pack_len) != pack_len){
                         printf("Error in READ from serial port 4\n");
                         UART = 0;
                         break;
@@ -371,7 +372,7 @@ int main()
             static int counter = 0;
 
 
-            // Figures window                                                
+            // Figures window
             //ImGui::SetNextWindowSize(ImVec2(840,580));
             //ImGui::SetNextWindowPos(ImVec2(10,10));
             ImGui::Begin("Figures",NULL,  ImGuiWindowFlags_NoResize  |
@@ -448,13 +449,27 @@ int main()
                 }
                 if (ImGui::Button("JOG +",ImVec2(50,50)))
                 {
-                    // do JOG +
+                    // do JOG + x direction
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("JOG -",ImVec2(50,50)))
                 {
-                    // do JOG -
+                    // do JOG - x direction
                 }
+                ImGui::SameLine();
+                ImGui::Text("X direction");
+                            if (ImGui::Button("JOG +",ImVec2(50,50)))
+                {
+                    // do JOG + y direction
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("JOG -",ImVec2(50,50)))
+                {
+                    // do JOG - y direction
+                }
+                ImGui::SameLine();
+                ImGui::Text("y direction");
+            
             }
             ImGui::End();
 
@@ -486,7 +501,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		
+
         glfwSwapBuffers(window);
     }
     end_thread_01 = 1;
@@ -498,7 +513,7 @@ int main()
     }
 
     ImPlot::DestroyContext();
-    ImGui::DestroyContext();    
+    ImGui::DestroyContext();
     glfwTerminate();
 
     return 0;
