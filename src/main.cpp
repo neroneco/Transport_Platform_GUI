@@ -17,8 +17,9 @@
 #include "linmath.h"
 #include "uart.h"
 
-#define PACKET_LEN_u8   (240U/3)
-#define PACKET_LEN_f32   (60U/3)
+#define PACKET_PER_SEC  (3)
+#define PACKET_LEN_u8   (240U/PACKET_PER_SEC)
+#define PACKET_LEN_f32  (60U/PACKET_PER_SEC)
 
 static int window_width = 0;
 static int window_height = 0;
@@ -39,6 +40,9 @@ static float Roll[610] = {0};
 static float Cart_dist_1[610] = {0};
 static float Cart_dist_2[610] = {0};
 static float time_data[610] = {0};
+static bool UART_recv_status = 0;
+static bool UART_send_status = 0;
+
 
 static int waiting_packet_num = 0;
 
@@ -79,8 +83,9 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static float t = 0;
     static int iter = 0;
     static int offset = 0;
+    static int seconds = 10;
 
-    offset = offset % 30; // TODO change offset to vary depending on desired time
+    offset = offset % (seconds*PACKET_PER_SEC); // TODO change offset to vary depending on desired time
     iter   = iter % PACKET_LEN_f32;
 
     if( waiting_packet_num > 0){
@@ -172,55 +177,121 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
             ImPlot::EndPlot();
         }
     }
+    if(sdata_4.Data.size()!=0){
+        if (ImGui::Button("Save data to file")) // TODO: add option of saving disaried amount of time like e.g. 1[s], 3[s], 10[s] ...
+        {
+            ImGui::LogToFile(-1,"data.txt");
+            ImGui::LogText("time pitch roll cart_dist_1 cart_dist_2 \n");
+            for (int i=0; i<sdata_4.Data.size();i++) {
+                ImGui::LogText("%.3f %.3f %.3f %.3f %.3f \n", sdata_1.Data[i].x, sdata_1.Data[i].y, sdata_2.Data[i].y, sdata_3.Data[i].y, sdata_4.Data[i].y);
+            }
+            ImGui::LogFinish();
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
+        // +-------------------------------+
+        // |  code   | message             |
+        // |  0      | no message          |
+        // |  d      | send data           |
+        // |  +x000  | jog y + distance    |
+        // |  -x000  | jog x - distance    |
+        // |  +y000  | jog y + distance    |
+        // |  -y000  | jog x - distance    |
+        // |  mx100  | mov y + distance    |
+        // |  mx100  | mov x - distance    |
+        // |  my100  | mov y + distance    |
+        // |  my100  | mov x - distance    |
+        // |  sx100  | set speed of x axis |
+        // |  sy100  | set speed of y axis |
+        // +-------------------------------+
+enum MSG_TYPE {
+    MSG_NONE,
+    MSG_DATA,
+    MSG_JOG,
+    MSG_MOV,
+    MSG_SPEED
+};
 
+static bool direction     =  0;
+static uint32_t speed     = 10; // [mm/s]
+static uint32_t position  = 10; // [mm]
+
+int msg_type = MSG_NONE;
+
+uint8_t TX[10] = {'x'};
 
 void UART_communication(void)
 {
+    static int seconds = 10;
     while(!end_thread_01){
         if(UART){
-                HANDLE port = open_serial_port(device, baud_rate);
-                if (port == INVALID_HANDLE_VALUE) { 
-                    printf("INVALID_HANDLE_VALUE for UART\n");
-                    UART = 0; 
+        
+            HANDLE port = open_serial_port(device, baud_rate);
+            if (port == INVALID_HANDLE_VALUE) { 
+                printf("INVALID_HANDLE_VALUE for UART\n");
+                UART = 0; 
+            }
+
+            while(UART){
+
+                switch (msg_type) {
+
+                    case MSG_DATA: {
+
+                    }break;
+
+                    case MSG_JOG: {
+
+                    }break;
+
+                    case MSG_MOV: {
+
+                    }break;
+
+                    case MSG_SPEED: {
+
+                    }break;
+
+                    case MSG_NONE: 
+                    default:{
+                    }break;
                 }
 
-                while(UART){
-                    UART_iter = UART_iter % 30; // TODO change ofset of UART iteration  
-                    static uint8_t TX = 'x';
-                    PurgeComm(port, PURGE_RXCLEAR);
-                    if(write_port(port, &TX, 1)!=0){
-                        printf("Error in WRITE from serial port\n");
-                        UART = 0;
-                        break;
-                    }
-                    if(read_port(port, (uint8_t*)(Pitch+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                        printf("Error in READ from serial port 1\n");
-                        UART = 0;
-                        break;
-                    }
-                    if(read_port(port, (uint8_t*)(Roll+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                        printf("Error in READ from serial port 2\n");
-                        UART = 0;
-                        break;
-                    }
-                    if(read_port(port, (uint8_t*)(Cart_dist_1+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                        printf("Error in READ from serial port 3\n");
-                        UART = 0;
-                        break;
-                    }
-                    if(read_port(port, (uint8_t*)(Cart_dist_2+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                        printf("Error in READ from serial port 4\n");
-                        UART = 0;
-                        break;
-                    }
-                    UART_iter++;
-                    waiting_packet_num++;
+                UART_iter = UART_iter % (seconds*PACKET_PER_SEC); // TODO change ofset of UART iteration  
+                PurgeComm(port, PURGE_RXCLEAR);
+                if(write_port(port, TX, 1)!=0){
+                    printf("Error in WRITE from serial port\n");
+                    UART = 0;
+                    break;
                 }
 
-                CloseHandle(port);
+                if(read_port(port, (uint8_t*)(Pitch+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
+                    printf("Error in READ from serial port 1\n");
+                    UART = 0;
+                    break;
+                }
+                if(read_port(port, (uint8_t*)(Roll+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
+                    printf("Error in READ from serial port 2\n");
+                    UART = 0;
+                    break;
+                }
+                if(read_port(port, (uint8_t*)(Cart_dist_1+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
+                    printf("Error in READ from serial port 3\n");
+                    UART = 0;
+                    break;
+                }
+                if(read_port(port, (uint8_t*)(Cart_dist_2+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
+                    printf("Error in READ from serial port 4\n");
+                    UART = 0;
+                    break;
+                }
+                UART_iter++;
+                waiting_packet_num++;
+            }
+
+            CloseHandle(port);
         }
         printf("hello from thread\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -379,22 +450,7 @@ int main()
             ImGui::Begin("Figures",NULL,  ImGuiWindowFlags_NoResize  |
                                           ImGuiWindowFlags_NoMove    |
                                           ImGuiWindowFlags_NoCollapse ); // Create a window called "Hello, world!" and append into it.
-
-            //if (ImPlot::BeginSubplots("##ItemSharing", rows, cols, ImVec2(-1,-1), flags)) {
-                //for (int i = 0; i < rows*cols; ++i) {
-                    // if (ImPlot::BeginPlot("My Plot 1",ImVec2(200,200)),ImPlotFlags_NoTitle) {
-                    //     ImPlot::SetupAxes(NULL,NULL,0,ImPlotAxisFlags_RangeFit);
-                    //     ImPlot::SetupAxesLimits(1, 1000, -180, 180);
-                    //     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
-                    //     ImPlot::SetupAxisLimitsConstraints(ImAxis_X1, 1, 1000);
-                    //     ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
-                    //     ImPlot::PlotLine("My Line Plot 1", time_data, Pitch, 1000);
-                    //     ImPlot::EndPlot();
-                    // }
                 RealtimePlots(Pitch,Roll,Cart_dist_1,Cart_dist_2);
-                //}
-                //ImPlot::EndSubplots();
-            //}
             ImGui::End();
 
             // UART window
@@ -424,6 +480,23 @@ int main()
 
             // UART enable
             ImGui::Checkbox("UART Enable", &UART);
+            if (UART) {
+                if (ImGui::TreeNode("Status of UART connection")) {
+                    if (UART_send_status) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "TX");
+                    } else {
+                        ImGui::TextDisabled("TX");
+                    }
+                    if (UART_recv_status) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "RX");
+                    } else {
+                        ImGui::TextDisabled("RX");
+                    }
+                    ImGui::TreePop();
+                }
+            }
+
+
             ImGui::End();
 
             // Cart control window
