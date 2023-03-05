@@ -85,7 +85,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static int offset = 0;
     static int seconds = 10;
 
-    offset = offset % (seconds*PACKET_PER_SEC); // TODO change offset to vary depending on desired time
+    offset = offset % (seconds*PACKET_PER_SEC);
     iter   = iter % PACKET_LEN_f32;
 
     if( waiting_packet_num > 0){
@@ -191,21 +191,21 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
 }
 
 //-----------------------------------------------------------------------------
-        // +-------------------------------+
-        // |  code   | message             |
-        // |  0      | no message          |
-        // |  d      | send data           |
-        // |  +x000  | jog y + distance    |
-        // |  -x000  | jog x - distance    |
-        // |  +y000  | jog y + distance    |
-        // |  -y000  | jog x - distance    |
-        // |  mx100  | mov y + distance    |
-        // |  mx100  | mov x - distance    |
-        // |  my100  | mov y + distance    |
-        // |  my100  | mov x - distance    |
-        // |  sx100  | set speed of x axis |
-        // |  sy100  | set speed of y axis |
-        // +-------------------------------+
+// +--------------------------------+
+// |  code    | message             |
+// |  0       | no message          |
+// |  d       | send data           |
+// |  j+x000  | jog y + distance    |
+// |  j-x000  | jog x - distance    |
+// |  j+y000  | jog y + distance    |
+// |  j-y000  | jog x - distance    |
+// |  mx100   | mov y + distance    |
+// |  mx100   | mov x - distance    |
+// |  my100   | mov y + distance    |
+// |  my100   | mov x - distance    |
+// |  sx100   | set speed of x axis |
+// |  sy100   | set speed of y axis |
+// +--------------------------------+
 enum MSG_TYPE {
     MSG_NONE,
     MSG_DATA,
@@ -214,9 +214,20 @@ enum MSG_TYPE {
     MSG_SPEED
 };
 
-static bool direction     =  0;
-static uint32_t speed     = 10; // [mm/s]
-static uint32_t position  = 10; // [mm]
+enum AXIS {
+    X,
+    Y
+};
+
+enum DIRECTION {
+    POSITIV,
+    NEGATIV
+};
+
+static bool     direction     =  0;
+static bool     axis          =  0;
+static uint32_t speed         = 10; // [mm/s]
+static uint32_t position      = 10; // [mm]
 
 int msg_type = MSG_NONE;
 
@@ -224,6 +235,7 @@ uint8_t TX[10] = {'x'};
 
 void UART_communication(void)
 {
+    static uint8_t buf[10];
     static int seconds = 10;
     while(!end_thread_01){
         if(UART){
@@ -233,39 +245,86 @@ void UART_communication(void)
                 printf("INVALID_HANDLE_VALUE for UART\n");
                 UART = 0; 
             }
+            memset(buf,0,sizeof(buf));
+            msg_type = MSG_DATA;
 
             while(UART){
 
-                switch (msg_type) {
+                switch (msg_type) {  // TODO varibles like msg_type, direct, axis should be atomic
 
                     case MSG_DATA: {
-
+                        buf[0] = 'd';
                     }break;
 
                     case MSG_JOG: {
 
+                        buf[0] = 'j';
+
+                        switch (direction) {
+                            case POSITIV : {
+                                buf[1] = '+';
+                            } break;
+                            case NEGATIV : {
+                                buf[1] = '-';
+                            } break;
+                        }
+
+                        switch (axis) {
+                            case X : {
+                                buf[2] = 'x';
+                            } break;
+                            case Y : {
+                                buf[2] = 'y';
+                            } break;
+                        }
                     }break;
 
                     case MSG_MOV: {
 
+                        buf[0] = 'm';
+
+                        switch (axis) {
+                            case X : {
+                                buf[1] = 'x';
+                            } break;
+                            case Y : {
+                                buf[1] = 'y';
+                            } break;
+                        }
+                        memcpy(buf+2,&position,sizeof(position));
                     }break;
 
                     case MSG_SPEED: {
 
+                        buf[0] = 's';
+
+                        switch (axis) {
+                            case X : {
+                                buf[1] = 'x';
+                            } break;
+                            case Y : {
+                                buf[1] = 'y';
+                            } break;
+                        }
+                        memcpy(buf+2,&speed,sizeof(speed));
                     }break;
 
-                    case MSG_NONE: 
+                    case MSG_NONE:
                     default:{
+                        memset(buf,0,sizeof(buf));
                     }break;
                 }
 
-                UART_iter = UART_iter % (seconds*PACKET_PER_SEC); // TODO change ofset of UART iteration  
+                printf("%s \n",buf);
+                UART_iter = UART_iter % (seconds*PACKET_PER_SEC);
                 PurgeComm(port, PURGE_RXCLEAR);
-                if(write_port(port, TX, 1)!=0){
+                if(write_port(port, buf, sizeof(buf))!=0){
                     printf("Error in WRITE from serial port\n");
                     UART = 0;
                     break;
                 }
+                memset(buf,0,sizeof(buf));
+                msg_type = MSG_DATA;
 
                 if(read_port(port, (uint8_t*)(Pitch+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
                     printf("Error in READ from serial port 1\n");
@@ -521,25 +580,37 @@ int main()
                     ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
                     cart_speed = 10;
                 }
-                if (ImGui::Button("JOG +",ImVec2(50,50)))
+                if (ImGui::Button("JOG + x",ImVec2(50,50)))
                 {
                     // do JOG + x direction
+                    msg_type   = MSG_JOG;
+                    direction  = POSITIV;
+                    axis       = X;
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("JOG -",ImVec2(50,50)))
+                if (ImGui::Button("JOG - x",ImVec2(50,50)))
                 {
                     // do JOG - x direction
+                    msg_type   = MSG_JOG;
+                    direction  = NEGATIV;
+                    axis       = X;
                 }
                 ImGui::SameLine();
                 ImGui::Text("X direction");
-                            if (ImGui::Button("JOG +",ImVec2(50,50)))
+                if (ImGui::Button("JOG + y",ImVec2(50,50)))
                 {
                     // do JOG + y direction
+                    msg_type   = MSG_JOG;
+                    direction  = POSITIV;
+                    axis       = Y;
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("JOG -",ImVec2(50,50)))
+                if (ImGui::Button("JOG - y",ImVec2(50,50)))
                 {
                     // do JOG - y direction
+                    msg_type   = MSG_JOG;
+                    direction  = NEGATIV;
+                    axis       = Y;
                 }
                 ImGui::SameLine();
                 ImGui::Text("y direction");
