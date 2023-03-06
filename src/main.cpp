@@ -17,9 +17,16 @@
 #include "linmath.h"
 #include "uart.h"
 
-#define PACKET_PER_SEC  (3)
-#define PACKET_LEN_u8   (240U/PACKET_PER_SEC)
-#define PACKET_LEN_f32  (60U/PACKET_PER_SEC)
+// #define PACKET_PER_SEC  (3)
+// #define PACKET_LEN_u8   (240U/PACKET_PER_SEC)
+// #define PACKET_LEN_f32  (60U/PACKET_PER_SEC)
+
+#define SAMPLING_FREQ   (60U) // [Hz]
+#define PACKET_PER_SEC   (3U)
+#define NUM_OF_DATA_SETS (4U)
+#define PACKET_LEN_u8   ((SAMPLING_FREQ*sizeof(float))/PACKET_PER_SEC)
+#define PACKET_LEN_f32   (SAMPLING_FREQ/PACKET_PER_SEC)
+#define DATA_SECONDS_STORAGE (20U) // [s]
 
 static int window_width = 0;
 static int window_height = 0;
@@ -35,11 +42,14 @@ uint32_t baud_rate = 900000;
 
 static int UART_iter = 0;
 static SSIZE_T received;
-static float Pitch[610] = {0};
-static float Roll[610] = {0};
-static float Cart_dist_1[610] = {0};
-static float Cart_dist_2[610] = {0};
-static float time_data[610] = {0};
+
+// FIXME change below values from 610 to something meaningful
+static float Pitch[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+static float Roll[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+static float Cart_dist_1[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+static float Cart_dist_2[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+static float time_data[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+
 static bool UART_recv_status = 0;
 static bool UART_send_status = 0;
 
