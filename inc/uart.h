@@ -43,7 +43,7 @@ HANDLE open_serial_port(const char * device, uint32_t baud_rate)
   timeouts.ReadIntervalTimeout = 0;
   timeouts.ReadTotalTimeoutConstant = 5000;
   timeouts.ReadTotalTimeoutMultiplier = 0;
-  timeouts.WriteTotalTimeoutConstant = 100;
+  timeouts.WriteTotalTimeoutConstant = 1000;
   timeouts.WriteTotalTimeoutMultiplier = 0;
  
   success = SetCommTimeouts(port, &timeouts);

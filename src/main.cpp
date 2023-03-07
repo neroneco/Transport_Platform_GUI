@@ -18,14 +18,14 @@
 #include "uart.h"
 
 
-#define SAMPLING_FREQ        (60U) // [Hz]
-#define PACKETS_PER_SECOND    (3U)
+#define SAMPLING_FREQ        (100U) // [Hz]
+#define PACKETS_PER_SECOND    (4U)
 #define NUM_OF_DATA_SETS      (4U)
 #define DATA_SECONDS_STORAGE (20U) // [s]
 
 
-static int freq          = 60;
-static int pack_per_sec  =  3;
+static int freq          = 100;
+static int pack_per_sec  =  4;
 static int data_sets_num =  4;
 
 static int data_set_len_f32 = ( freq / pack_per_sec );              // 20
@@ -45,7 +45,7 @@ static bool end_thread_01 = 0;
 static bool UART = 0;
 static bool new_data_ready = 0;
 static char* device = "\\\\.\\COM3";
-uint32_t baud_rate = 900000;
+uint32_t baud_rate = 400000;
 
 static int UART_iter = 0;
 static SSIZE_T received;
@@ -103,46 +103,62 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static int offset = 0;
     static int seconds = 10;
 
-    offset = offset % (seconds*pack_per_sec);
-    iter   = iter % data_set_len_f32;
+    // offset = offset % (seconds*pack_per_sec);
+    // iter   = iter % data_set_len_f32;
 
     if( waiting_packet_num > 0){
-        if((waiting_packet_num > 1) && ((iter % 7) == 0)){
-            if(iter<(data_set_len_f32-1)){
+
+        // if((waiting_packet_num > 2) ){//&& ((iter % 7) == 0)){
+        //     if(iter<(data_set_len_f32-1)){
+        //         for ( int i = 0; i < 2; i++) {
+        //             t += ImGui::GetIO().DeltaTime;
+        //             sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+        //             sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+        //             sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+        //             sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
+        //             iter++;
+        //         }
+
+        //     }else if(iter == (data_set_len_f32-1)){
+        //         t += ImGui::GetIO().DeltaTime;
+        //         sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+        //         sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+        //         sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+        //         sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
+        //         iter++;
+        //     }
+        //     if(iter == data_set_len_f32){
+        //         waiting_packet_num--;
+        //         offset++;
+        //     }
+        // } else {
+        //     t += ImGui::GetIO().DeltaTime;
+        //     sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+        //     sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+        //     sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+        //     sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
+        //     iter++;
+        //     if(iter == data_set_len_f32){
+        //         waiting_packet_num--;
+        //         offset++;
+        //     }
+
+        for ( int i = 0; i<100; i++) {
+            if ( waiting_packet_num > i ) {
                 t += ImGui::GetIO().DeltaTime;
                 sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
                 sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
                 sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
                 sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
                 iter++;
-                t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-                iter++;
-            }else if(iter == (data_set_len_f32-1)){
-                t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-                iter++;
-            }
-            if(iter == data_set_len_f32){
-                waiting_packet_num--;
-                offset++;
-            }
-        } else {
-            t += ImGui::GetIO().DeltaTime;
-            sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-            sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-            sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-            sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-            iter++;
-            if(iter == data_set_len_f32){
-                waiting_packet_num--;
-                offset++;
+                if(iter == data_set_len_f32){
+                    waiting_packet_num--;
+                    offset++;
+                    offset = offset % (seconds * pack_per_sec);
+                    iter   = iter   % data_set_len_f32;
+                }
+            } else {
+                break;
             }
         }
     }
@@ -337,8 +353,11 @@ void UART_communication(void)
 
                 printf("%s \n",buf);
                 UART_iter = UART_iter % (seconds*pack_per_sec);
+                PurgeComm(port, PURGE_RXABORT);
+                PurgeComm(port, PURGE_TXABORT);
                 PurgeComm(port, PURGE_RXCLEAR);
                 PurgeComm(port, PURGE_TXCLEAR);
+                //std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 if(write_port(port, buf, sizeof(buf))!=0){
                     printf("Error in WRITE from serial port\n");
                     UART = 0;
@@ -352,8 +371,9 @@ void UART_communication(void)
 
                 printf("%d %d\n",pack_len_f32,pack_len_u8);
 
-                if( read_port( port, (uint8_t*)( Data_buffer + ( pack_len_f32 * UART_iter )), pack_len_u8 ) != pack_len_u8 ){
-                    printf("Error in READ from serial port 1\n");
+                int data_read = read_port( port, (uint8_t*)( Data_buffer + ( pack_len_f32 * UART_iter )), pack_len_u8 );
+                if( data_read != pack_len_u8 ){
+                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %d\n",data_read,pack_len_u8);
                     UART = 0;
                     break;
                 }
@@ -561,6 +581,7 @@ int main()
 
             // UART enable
             ImGui::Checkbox("UART Enable", &UART);
+            ImGui::Text("Waiting Packets to be ploted: %d",waiting_packet_num);
             if (UART) {
                 if (ImGui::TreeNode("Status of UART connection")) {
                     if (UART_send_status) {
