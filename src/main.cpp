@@ -17,16 +17,23 @@
 #include "linmath.h"
 #include "uart.h"
 
-// #define PACKET_PER_SEC  (3)
-// #define PACKET_LEN_u8   (240U/PACKET_PER_SEC)
-// #define PACKET_LEN_f32  (60U/PACKET_PER_SEC)
 
-#define SAMPLING_FREQ   (60U) // [Hz]
-#define PACKET_PER_SEC   (3U)
-#define NUM_OF_DATA_SETS (4U)
-#define PACKET_LEN_u8   ((SAMPLING_FREQ*sizeof(float))/PACKET_PER_SEC)
-#define PACKET_LEN_f32   (SAMPLING_FREQ/PACKET_PER_SEC)
+#define SAMPLING_FREQ        (60U) // [Hz]
+#define PACKETS_PER_SECOND    (3U)
+#define NUM_OF_DATA_SETS      (4U)
 #define DATA_SECONDS_STORAGE (20U) // [s]
+
+
+static int freq          = 60;
+static int pack_per_sec  =  3;
+static int data_sets_num =  4;
+
+static int data_set_len_f32 = ( freq / pack_per_sec );              // 20
+static int data_set_len_u8  = ( data_set_len_f32 * sizeof(float) ); // 20 * 4 = 80
+
+static int pack_len_f32 = data_set_len_f32 * data_sets_num;   // 20 * 4 = 80
+static int pack_len_u8  = data_set_len_u8  * data_sets_num;   // 80 * 4 = 320
+
 
 static int window_width = 0;
 static int window_height = 0;
@@ -49,6 +56,7 @@ static float Roll[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
 static float Cart_dist_1[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
 static float Cart_dist_2[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
 static float time_data[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
+static float Data_buffer[DATA_SECONDS_STORAGE*SAMPLING_FREQ*NUM_OF_DATA_SETS] = {0};
 
 static bool UART_recv_status = 0;
 static bool UART_send_status = 0;
@@ -95,49 +103,51 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static int offset = 0;
     static int seconds = 10;
 
-    offset = offset % (seconds*PACKET_PER_SEC);
-    iter   = iter % PACKET_LEN_f32;
+    offset = offset % (seconds*pack_per_sec);
+    iter   = iter % data_set_len_f32;
 
     if( waiting_packet_num > 0){
         if((waiting_packet_num > 1) && ((iter % 7) == 0)){
-            if(iter<(PACKET_LEN_f32-1)){
+            if(iter<(data_set_len_f32-1)){
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
                 iter++;
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
                 iter++;
-            }else if(iter == (PACKET_LEN_f32-1)){
+            }else if(iter == (data_set_len_f32-1)){
                 t += ImGui::GetIO().DeltaTime;
-                sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
+                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
                 iter++;
             }
-            if(iter == PACKET_LEN_f32){
+            if(iter == data_set_len_f32){
                 waiting_packet_num--;
                 offset++;
             }
         } else {
             t += ImGui::GetIO().DeltaTime;
-            sdata_1.AddPoint(t, y_data_1[iter+(PACKET_LEN_f32*offset)]);
-            sdata_2.AddPoint(t, y_data_2[iter+(PACKET_LEN_f32*offset)]);
-            sdata_3.AddPoint(t, y_data_3[iter+(PACKET_LEN_f32*offset)]);
-            sdata_4.AddPoint(t, y_data_4[iter+(PACKET_LEN_f32*offset)]);
+            sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
+            sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
+            sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
+            sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
             iter++;
-            if(iter == PACKET_LEN_f32){
+            if(iter == data_set_len_f32){
                 waiting_packet_num--;
                 offset++;
             }
         }
     }
+
+    //printf("%d\n",waiting_packet_num);
 
     static float history = 10.0f;
     ImGui::SetCursorPosX(267);
@@ -326,8 +336,9 @@ void UART_communication(void)
                 }
 
                 printf("%s \n",buf);
-                UART_iter = UART_iter % (seconds*PACKET_PER_SEC);
+                UART_iter = UART_iter % (seconds*pack_per_sec);
                 PurgeComm(port, PURGE_RXCLEAR);
+                PurgeComm(port, PURGE_TXCLEAR);
                 if(write_port(port, buf, sizeof(buf))!=0){
                     printf("Error in WRITE from serial port\n");
                     UART = 0;
@@ -336,26 +347,27 @@ void UART_communication(void)
                 memset(buf,0,sizeof(buf));
                 msg_type = MSG_DATA;
 
-                if(read_port(port, (uint8_t*)(Pitch+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
+
+
+
+                printf("%d %d\n",pack_len_f32,pack_len_u8);
+
+                if( read_port( port, (uint8_t*)( Data_buffer + ( pack_len_f32 * UART_iter )), pack_len_u8 ) != pack_len_u8 ){
                     printf("Error in READ from serial port 1\n");
                     UART = 0;
                     break;
                 }
-                if(read_port(port, (uint8_t*)(Roll+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                    printf("Error in READ from serial port 2\n");
-                    UART = 0;
-                    break;
-                }
-                if(read_port(port, (uint8_t*)(Cart_dist_1+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                    printf("Error in READ from serial port 3\n");
-                    UART = 0;
-                    break;
-                }
-                if(read_port(port, (uint8_t*)(Cart_dist_2+(PACKET_LEN_f32*UART_iter)), PACKET_LEN_u8) != PACKET_LEN_u8){
-                    printf("Error in READ from serial port 4\n");
-                    UART = 0;
-                    break;
-                }
+
+                // memcpy((Pitch       + (20*UART_iter)), (Data_buffer +  0 + (80*UART_iter)), (20*sizeof(float)));
+                // memcpy((Roll        + (20*UART_iter)), (Data_buffer + 20 + (80*UART_iter)), (20*sizeof(float)));
+                // memcpy((Cart_dist_1 + (20*UART_iter)), (Data_buffer + 40 + (80*UART_iter)), (20*sizeof(float)));
+                // memcpy((Cart_dist_2 + (20*UART_iter)), (Data_buffer + 60 + (80*UART_iter)), (20*sizeof(float)));
+
+                memcpy((Pitch       + (data_set_len_f32 * UART_iter)), (Data_buffer + (0 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
+                memcpy((Roll        + (data_set_len_f32 * UART_iter)), (Data_buffer + (1 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
+                memcpy((Cart_dist_1 + (data_set_len_f32 * UART_iter)), (Data_buffer + (2 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
+                memcpy((Cart_dist_2 + (data_set_len_f32 * UART_iter)), (Data_buffer + (3 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
+
                 UART_iter++;
                 waiting_packet_num++;
             }
