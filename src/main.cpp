@@ -18,13 +18,13 @@
 #include "uart.h"
 
 
-#define SAMPLING_FREQ        (100U) // [Hz]
+#define SAMPLING_FREQ        (200U) // [Hz]
 #define PACKETS_PER_SECOND    (4U)
 #define NUM_OF_DATA_SETS      (4U)
 #define DATA_SECONDS_STORAGE (20U) // [s]
 
 
-static int freq          = 100;
+static int freq          = 200;
 static int pack_per_sec  =  4;
 static int data_sets_num =  4;
 
@@ -145,7 +145,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
 
         for ( int i = 0; i<100; i++) {
             if ( waiting_packet_num > i ) {
-                t += ImGui::GetIO().DeltaTime;
+                t += 0.005;
                 sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
                 sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
                 sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
@@ -357,7 +357,7 @@ void UART_communication(void)
                 PurgeComm(port, PURGE_TXABORT);
                 PurgeComm(port, PURGE_RXCLEAR);
                 PurgeComm(port, PURGE_TXCLEAR);
-                //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                //std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 if(write_port(port, buf, sizeof(buf))!=0){
                     printf("Error in WRITE from serial port\n");
                     UART = 0;
