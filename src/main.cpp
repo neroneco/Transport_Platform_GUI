@@ -38,7 +38,11 @@ static int pack_len_u8  = data_set_len_u8  * data_sets_num;   // 80 * 4 = 320
 static int window_width = 0;
 static int window_height = 0;
 
-uint32_t cart_speed = 10;
+uint32_t x_cart_speed = 10;
+uint32_t y_cart_speed = 10;
+
+uint32_t x_cart_pos = 215;
+uint32_t y_cart_pos = 215;
 
 // UART 
 static bool end_thread_01 = 0;
@@ -322,9 +326,11 @@ void UART_communication(void)
                         switch (axis) {
                             case X : {
                                 buf[1] = 'x';
+                                position = x_cart_pos;
                             } break;
                             case Y : {
                                 buf[1] = 'y';
+                                position = y_cart_pos;
                             } break;
                         }
                         memcpy(buf+2,&position,sizeof(position));
@@ -337,9 +343,11 @@ void UART_communication(void)
                         switch (axis) {
                             case X : {
                                 buf[1] = 'x';
+                                speed = x_cart_speed;
                             } break;
                             case Y : {
                                 buf[1] = 'y';
+                                speed = y_cart_speed;
                             } break;
                         }
                         memcpy(buf+2,&speed,sizeof(speed));
@@ -614,16 +622,72 @@ int main()
             }
             if (ctrl_mod == 1) {
                 ImGui::SeparatorText("Motor configuration");
+                ImGui::SeparatorText("SPEED");
                 static char buf_cart[66] = "";
-                sprintf(buf_cart,"%d",cart_speed); 
-                ImGui::InputText("cart speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
+                sprintf(buf_cart,"%d",x_cart_speed); 
+                ImGui::InputText("cart X speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
                 try {
-                    cart_speed = std::stoi(buf_cart);
+                    x_cart_speed = std::stoi(buf_cart);
                 } catch(std::invalid_argument& e) {
                     ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
-                    cart_speed = 10;
+                    x_cart_speed = 10;
                 }
-                if (ImGui::Button("JOG + x",ImVec2(50,50)))
+                sprintf(buf_cart,"%d",y_cart_speed);
+                ImGui::InputText("cart Y speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+                    y_cart_speed = std::stoi(buf_cart);
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    y_cart_speed = 10;
+                }
+                if (ImGui::Button("X cart UPDATE SPEED",ImVec2(150,30)))
+                {
+                    // do JOG + x direction
+                    msg_type   = MSG_SPEED;
+                    axis       = X;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Y cart UPDATE SPEED",ImVec2(150,30)))
+                {
+                    // do JOG + x direction
+                    msg_type   = MSG_SPEED;
+                    axis       = Y;
+                }
+
+                ImGui::SeparatorText("POSITION");
+                sprintf(buf_cart,"%d",x_cart_pos); 
+                ImGui::InputText("cart X position [mm]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+                    x_cart_pos = std::stoi(buf_cart);
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    x_cart_pos = 215;
+                }
+                sprintf(buf_cart,"%d",y_cart_pos);
+                ImGui::InputText("cart Y position [mm]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+                    y_cart_pos = std::stoi(buf_cart);
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    y_cart_pos = 215;
+                }
+                if (ImGui::Button("X cart UPDATE POSITION",ImVec2(170,30)))
+                {
+                    // do JOG + x direction
+                    msg_type   = MSG_MOV;
+                    axis       = X;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Y cart UPDATE POSITION",ImVec2(170,30)))
+                {
+                    // do JOG + x direction
+                    msg_type   = MSG_MOV;
+                    axis       = Y;
+                }
+
+
+                ImGui::SeparatorText("JOG");
+                if (ImGui::Button("JOG + x",ImVec2(70,30)))
                 {
                     // do JOG + x direction
                     msg_type   = MSG_JOG;
@@ -631,7 +695,7 @@ int main()
                     axis       = X;
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("JOG - x",ImVec2(50,50)))
+                if (ImGui::Button("JOG - x",ImVec2(70,30)))
                 {
                     // do JOG - x direction
                     msg_type   = MSG_JOG;
@@ -640,7 +704,7 @@ int main()
                 }
                 ImGui::SameLine();
                 ImGui::Text("X direction");
-                if (ImGui::Button("JOG + y",ImVec2(50,50)))
+                if (ImGui::Button("JOG + y",ImVec2(70,30)))
                 {
                     // do JOG + y direction
                     msg_type   = MSG_JOG;
@@ -648,7 +712,7 @@ int main()
                     axis       = Y;
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("JOG - y",ImVec2(50,50)))
+                if (ImGui::Button("JOG - y",ImVec2(70,30)))
                 {
                     // do JOG - y direction
                     msg_type   = MSG_JOG;
