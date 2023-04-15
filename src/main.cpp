@@ -44,6 +44,43 @@ uint32_t y_cart_speed = 10;
 uint32_t x_cart_pos = 215;
 uint32_t y_cart_pos = 215;
 
+
+typedef struct {
+    float carts_pos_x[250];
+    float carts_pos_y[250];
+    float carts_vel_x[250];
+    float carts_vel_y[250];
+    float carts_acc_x[250];
+    float carts_acc_y[250];
+
+    float mpu9250_acce_x[250];
+    float mpu9250_acce_y[250];
+    float mpu9250_gyro_x[250];
+    float mpu9250_gyro_y[250];
+
+    float mpu6886_acce_x[250];
+    float mpu6886_acce_y[250];
+    float mpu6886_gyro_x[250];
+    float mpu6886_gyro_y[250];
+
+    float pitch_no_filter[250];
+    float roll_no_filter[250];
+    float pitch_complementary[250];
+    float roll_complementary[250];
+    float pitch_alfa_beta[250];
+    float roll_alfa_beta[250];
+    float pitch_kalman[250];
+    float roll_kalman[250];
+    float pitch[250];
+    float roll[250];
+} data_packet_struct;
+
+
+data_packet_struct      Data_Packet[10]  = {0};
+
+
+
+
 // UART 
 static bool end_thread_01 = 0;
 static bool UART = 0;
@@ -73,7 +110,7 @@ struct ScrollingBuffer {
     int MaxSize;
     int Offset;
     ImVector<ImVec2> Data;
-    ScrollingBuffer(int max_size = (2000)) {
+    ScrollingBuffer(int max_size = (20000)) {
         MaxSize = max_size;
         Offset  = 0;
         Data.reserve(MaxSize);
@@ -104,70 +141,37 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static ScrollingBuffer sdata_4;
     static float t = 0;
     static int iter = 0;
-    static int offset = 0;
+    static int packet_num = 0;
     static int seconds = 10;
 
-    // offset = offset % (seconds*pack_per_sec);
-    // iter   = iter % data_set_len_f32;
 
     if( waiting_packet_num > 0){
-
-        // if((waiting_packet_num > 2) ){//&& ((iter % 7) == 0)){
-        //     if(iter<(data_set_len_f32-1)){
-        //         for ( int i = 0; i < 2; i++) {
-        //             t += ImGui::GetIO().DeltaTime;
-        //             sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-        //             sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-        //             sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-        //             sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-        //             iter++;
-        //         }
-
-        //     }else if(iter == (data_set_len_f32-1)){
-        //         t += ImGui::GetIO().DeltaTime;
-        //         sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-        //         sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-        //         sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-        //         sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-        //         iter++;
-        //     }
-        //     if(iter == data_set_len_f32){
-        //         waiting_packet_num--;
-        //         offset++;
-        //     }
-        // } else {
-        //     t += ImGui::GetIO().DeltaTime;
-        //     sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-        //     sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-        //     sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-        //     sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
-        //     iter++;
-        //     if(iter == data_set_len_f32){
-        //         waiting_packet_num--;
-        //         offset++;
-        //     }
-
         for ( int i = 0; i<100; i++) {
             if ( waiting_packet_num > i ) {
                 t += 0.005;
-                sdata_1.AddPoint(t, y_data_1[iter+(data_set_len_f32*offset)]);
-                sdata_2.AddPoint(t, y_data_2[iter+(data_set_len_f32*offset)]);
-                sdata_3.AddPoint(t, y_data_3[iter+(data_set_len_f32*offset)]);
-                sdata_4.AddPoint(t, y_data_4[iter+(data_set_len_f32*offset)]);
+
+                Data_Packet[packet_num].pitch[iter];
+                Data_Packet[packet_num].roll[iter];
+                Data_Packet[packet_num].carts_pos_x[iter];
+                Data_Packet[packet_num].carts_pos_y[iter];
+
+                sdata_1.AddPoint(t, Data_Packet[packet_num].pitch[iter]);
+                sdata_2.AddPoint(t, Data_Packet[packet_num].roll[iter]);
+                sdata_3.AddPoint(t, Data_Packet[packet_num].carts_pos_x[iter]);
+                sdata_4.AddPoint(t, Data_Packet[packet_num].carts_pos_y[iter]);
+                
                 iter++;
-                if(iter == data_set_len_f32){
+                iter %= 250; 
+                if(iter == 0){
                     waiting_packet_num--;
-                    offset++;
-                    offset = offset % (seconds * pack_per_sec);
-                    iter   = iter   % data_set_len_f32;
+                    packet_num++;
+                    packet_num %= 10;
                 }
             } else {
                 break;
             }
         }
     }
-
-    //printf("%d\n",waiting_packet_num);
 
     static float history = 10.0f;
     ImGui::SetCursorPosX(267);
@@ -177,43 +181,43 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
     if(sdata_1.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_1", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Pitch", flags, flags);
+            ImPlot::SetupAxes("time [s]", "Pitch [deg]", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
             ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
-            ImPlot::PlotLine("Mouse Y", &sdata_1.Data[0].x, &sdata_1.Data[0].y, sdata_1.Data.size(), 0, sdata_1.Offset, 2*sizeof(float));
+            ImPlot::PlotLine("Pitch", &sdata_1.Data[0].x, &sdata_1.Data[0].y, sdata_1.Data.size(), 0, sdata_1.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
         }
     }
     ImGui::SameLine();
     if(sdata_2.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_2", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Roll", flags, flags);
+            ImPlot::SetupAxes("time [s]", "Roll [deg]", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
             ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
             ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
-            ImPlot::PlotLine("Mouse Y", &sdata_2.Data[0].x, &sdata_2.Data[0].y, sdata_2.Data.size(), 0, sdata_2.Offset, 2*sizeof(float));
+            ImPlot::PlotLine("Roll", &sdata_2.Data[0].x, &sdata_2.Data[0].y, sdata_2.Data.size(), 0, sdata_2.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
         }
     }
     if(sdata_3.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_3", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Cart 1 position", flags, flags);
+            ImPlot::SetupAxes("time [s]", "Cart X position [mm]", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
             ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("Mouse Y", &sdata_3.Data[0].x, &sdata_3.Data[0].y, sdata_3.Data.size(), 0, sdata_3.Offset, 2*sizeof(float));
+            ImPlot::PlotLine("Cart X", &sdata_3.Data[0].x, &sdata_3.Data[0].y, sdata_3.Data.size(), 0, sdata_3.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
         }
     }
     ImGui::SameLine();
     if(sdata_4.Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_4", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Cart 2 position", flags, flags);
+            ImPlot::SetupAxes("time [s]", "Cart Y position [mm]", flags, flags);
             ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
+            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
             ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("Mouse Y", &sdata_4.Data[0].x, &sdata_4.Data[0].y, sdata_4.Data.size(), 0, sdata_4.Offset, 2*sizeof(float));
+            ImPlot::PlotLine("Cart Y", &sdata_4.Data[0].x, &sdata_4.Data[0].y, sdata_4.Data.size(), 0, sdata_4.Offset, 2*sizeof(float));
             ImPlot::EndPlot();
         }
     }
@@ -221,7 +225,7 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
         if (ImGui::Button("Save data to file")) // TODO: add option of saving disaried amount of time like e.g. 1[s], 3[s], 10[s] ...
         {
             ImGui::LogToFile(-1,"data.txt");
-            ImGui::LogText("time pitch roll cart_dist_1 cart_dist_2 \n");
+            ImGui::LogText("time pitch roll cart_dist_x cart_dist_y \n");
             for (int i=0; i<sdata_4.Data.size();i++) {
                 ImGui::LogText("%.3f %.3f %.3f %.3f %.3f \n", sdata_1.Data[i].x, sdata_1.Data[i].y, sdata_2.Data[i].y, sdata_3.Data[i].y, sdata_4.Data[i].y);
             }
@@ -379,11 +383,16 @@ void UART_communication(void)
 
                 printf("%d %d\n",pack_len_f32,pack_len_u8);
 
-                int data_read = read_port( port, (uint8_t*)( Data_buffer + ( pack_len_f32 * UART_iter )), pack_len_u8 );
-                if( data_read != pack_len_u8 ){
-                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %d\n",data_read,pack_len_u8);
+                static int packet_num = 0;
+                int data_read = read_port( port, (uint8_t*)&Data_Packet[packet_num], sizeof(data_packet_struct) );
+                if( data_read != sizeof(data_packet_struct) ){
+                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %d\n",data_read,sizeof(data_packet_struct));
                     UART = 0;
                     break;
+                } else {
+                    packet_num++;
+                    packet_num %= 10;
+                    printf("suprise!!! : %3.f %d \n", Data_Packet[0].carts_pos_x[7], packet_num);
                 }
 
                 // memcpy((Pitch       + (20*UART_iter)), (Data_buffer +  0 + (80*UART_iter)), (20*sizeof(float)));
