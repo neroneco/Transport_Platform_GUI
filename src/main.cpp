@@ -18,22 +18,6 @@
 #include "uart.h"
 
 
-#define SAMPLING_FREQ        (200U) // [Hz]
-#define PACKETS_PER_SECOND    (4U)
-#define NUM_OF_DATA_SETS      (4U)
-#define DATA_SECONDS_STORAGE (20U) // [s]
-
-
-static int freq          = 200;
-static int pack_per_sec  =  4;
-static int data_sets_num =  4;
-
-static int data_set_len_f32 = ( freq / pack_per_sec );              // 20
-static int data_set_len_u8  = ( data_set_len_f32 * sizeof(float) ); // 20 * 4 = 80
-
-static int pack_len_f32 = data_set_len_f32 * data_sets_num;   // 20 * 4 = 80
-static int pack_len_u8  = data_set_len_u8  * data_sets_num;   // 80 * 4 = 320
-
 
 static int window_width = 0;
 static int window_height = 0;
@@ -45,69 +29,18 @@ uint32_t x_cart_pos = 215;
 uint32_t y_cart_pos = 215;
 
 
-typedef struct {
-    float carts_pos_x[250];
-    float carts_pos_y[250];
-    float carts_vel_x[250];
-    float carts_vel_y[250];
-    float carts_acc_x[250];
-    float carts_acc_y[250];
-#if 1
-    float mpu9250_acce_x[250];
-    float mpu9250_acce_y[250];
-    float mpu9250_acce_z[250];
-    float mpu9250_gyro_x[250];
-    float mpu9250_gyro_y[250];
-    float mpu9250_gyro_z[250];
-
-    float mpu6886_acce_x[250];
-    float mpu6886_acce_y[250];
-    float mpu6886_acce_z[250];
-    float mpu6886_gyro_x[250];
-    float mpu6886_gyro_y[250];
-    float mpu6886_gyro_z[250];
-#endif
-    float pitch_no_filter[250];
-    float roll_no_filter[250];
-    float pitch_complementary[250];
-    float roll_complementary[250];
-    float pitch_alfa_beta[250];
-    float roll_alfa_beta[250];
-    float pitch_kalman[250];
-    float roll_kalman[250];
-    float pitch[250];
-    float roll[250];
-} data_packet_struct;
-
 
 data_packet_struct      Data_Packet[10]  = {0};
 
 
-
-
 // UART 
-static bool end_thread_01 = 0;
-static bool UART = 0;
-static bool new_data_ready = 0;
-static char* device = "\\\\.\\COM3";
+bool end_thread_01 = 0;
+bool UART = 0;
+char* device = "\\\\.\\COM3";
 uint32_t baud_rate = 900000;
 
-static int UART_iter = 0;
-static SSIZE_T received;
 
-// FIXME change below values from 610 to something meaningful
-static float Pitch[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
-static float Roll[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
-static float Cart_dist_1[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
-static float Cart_dist_2[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
-static float time_data[DATA_SECONDS_STORAGE*SAMPLING_FREQ] = {0};
-static float Data_buffer[DATA_SECONDS_STORAGE*SAMPLING_FREQ*NUM_OF_DATA_SETS] = {0};
-
-static bool UART_recv_status = 0;
-static bool UART_send_status = 0;
-
-
-static int waiting_packet_num = 0;
+int waiting_packet_num = 0;
 
 // utility structure for realtime plot
 struct ScrollingBuffer {
@@ -212,7 +145,7 @@ static float t;
 static bool Save_Data_Status[28];
 static bool Figures[3];
 
-void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_data_4) {
+void RealtimePlots(void) {
 
     static int iter = 0;
     static int packet_num = 0;
@@ -267,186 +200,14 @@ void RealtimePlots(float* y_data_1, float* y_data_2, float* y_data_3, float* y_d
     }
 }
 
-//-----------------------------------------------------------------------------
-// +--------------------------------+
-// |  code    | message             |
-// |  0       | no message          |
-// |  d       | send data           |
-// |  j+x000  | jog y + distance    |
-// |  j-x000  | jog x - distance    |
-// |  j+y000  | jog y + distance    |
-// |  j-y000  | jog x - distance    |
-// |  mx100   | mov y + distance    |
-// |  mx100   | mov x - distance    |
-// |  my100   | mov y + distance    |
-// |  my100   | mov x - distance    |
-// |  sx100   | set speed of x axis |
-// |  sy100   | set speed of y axis |
-// +--------------------------------+
-enum MSG_TYPE {
-    MSG_NONE,
-    MSG_DATA,
-    MSG_JOG,
-    MSG_MOV,
-    MSG_SPEED
-};
 
-enum AXIS {
-    X,
-    Y
-};
-
-enum DIRECTION {
-    POSITIV,
-    NEGATIV
-};
-
-static bool     direction     =  0;
-static bool     axis          =  0;
-static uint32_t speed         = 10; // [mm/s]
-static uint32_t position      = 10; // [mm]
+bool     direction     =  0;
+bool     axis          =  0;
+uint32_t speed         = 10;
+uint32_t position      = 10;
 
 int msg_type = MSG_NONE;
 
-uint8_t TX[10] = {'x'};
-
-void UART_communication(void)
-{
-    static uint8_t buf[10];
-    static int seconds = 10;
-    while(!end_thread_01){
-        if(UART){
-        
-            HANDLE port = open_serial_port(device, baud_rate);
-            if (port == INVALID_HANDLE_VALUE) { 
-                printf("INVALID_HANDLE_VALUE for UART\n");
-                UART = 0; 
-            }
-            memset(buf,0,sizeof(buf));
-            msg_type = MSG_DATA;
-
-            while(UART){
-
-                switch (msg_type) {  // TODO varibles like msg_type, direct, axis should be atomic
-
-                    case MSG_DATA: {
-                        buf[0] = 'd';
-                    }break;
-
-                    case MSG_JOG: {
-
-                        buf[0] = 'j';
-
-                        switch (direction) {
-                            case POSITIV : {
-                                buf[1] = '+';
-                            } break;
-                            case NEGATIV : {
-                                buf[1] = '-';
-                            } break;
-                        }
-
-                        switch (axis) {
-                            case X : {
-                                buf[2] = 'x';
-                            } break;
-                            case Y : {
-                                buf[2] = 'y';
-                            } break;
-                        }
-                    }break;
-
-                    case MSG_MOV: {
-
-                        buf[0] = 'm';
-
-                        switch (axis) {
-                            case X : {
-                                buf[1] = 'x';
-                                position = x_cart_pos;
-                            } break;
-                            case Y : {
-                                buf[1] = 'y';
-                                position = y_cart_pos;
-                            } break;
-                        }
-                        memcpy(buf+2,&position,sizeof(position));
-                    }break;
-
-                    case MSG_SPEED: {
-
-                        buf[0] = 's';
-
-                        switch (axis) {
-                            case X : {
-                                buf[1] = 'x';
-                                speed = x_cart_speed;
-                            } break;
-                            case Y : {
-                                buf[1] = 'y';
-                                speed = y_cart_speed;
-                            } break;
-                        }
-                        memcpy(buf+2,&speed,sizeof(speed));
-                    }break;
-
-                    case MSG_NONE:
-                    default:{
-                        memset(buf,0,sizeof(buf));
-                    }break;
-                }
-
-                printf("%s \n",buf);
-                UART_iter = UART_iter % (seconds*pack_per_sec);
-                PurgeComm(port, PURGE_RXABORT);
-                PurgeComm(port, PURGE_TXABORT);
-                PurgeComm(port, PURGE_RXCLEAR);
-                PurgeComm(port, PURGE_TXCLEAR);
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-                // TODO change this to something meaningfull
-                static uint8_t abba[10] = {'1','2','3','4','5','6','7','8','9','0',};
-                if(write_port(port, abba, 10)!=0){
-                    printf("Error in WRITE from serial port\n");
-                    UART = 0;
-                    break;
-                }
-                memset(buf,0,sizeof(buf));
-                msg_type = MSG_DATA;
-
-
-                //std::this_thread::sleep_for(std::chrono::milliseconds(20));
-                static int packet_num = 0;
-                int data_read = read_port( port, (uint8_t*)&Data_Packet[packet_num], sizeof(data_packet_struct) );
-                if( data_read != sizeof(data_packet_struct) ){
-                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %d\n",data_read,sizeof(data_packet_struct));
-                    UART = 0;
-                    break;
-                } else {
-                    packet_num++;
-                    packet_num %= 10;
-                    printf("suprise!!! : %3.f %d \n", Data_Packet[0].carts_pos_x[7], packet_num);
-                }
-
-                // memcpy((Pitch       + (20*UART_iter)), (Data_buffer +  0 + (80*UART_iter)), (20*sizeof(float)));
-                // memcpy((Roll        + (20*UART_iter)), (Data_buffer + 20 + (80*UART_iter)), (20*sizeof(float)));
-                // memcpy((Cart_dist_1 + (20*UART_iter)), (Data_buffer + 40 + (80*UART_iter)), (20*sizeof(float)));
-                // memcpy((Cart_dist_2 + (20*UART_iter)), (Data_buffer + 60 + (80*UART_iter)), (20*sizeof(float)));
-
-                // memcpy((Pitch       + (data_set_len_f32 * UART_iter)), (Data_buffer + (0 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
-                // memcpy((Roll        + (data_set_len_f32 * UART_iter)), (Data_buffer + (1 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
-                // memcpy((Cart_dist_1 + (data_set_len_f32 * UART_iter)), (Data_buffer + (2 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
-                // memcpy((Cart_dist_2 + (data_set_len_f32 * UART_iter)), (Data_buffer + (3 * data_set_len_f32) + (pack_len_f32 * UART_iter)), data_set_len_u8);
-
-                UART_iter++;
-                waiting_packet_num++;
-            }
-
-            CloseHandle(port);
-        }
-        printf("hello from thread\n");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -531,18 +292,6 @@ int main()
     bool show_demo_ImGuiWindow  = false;
     bool show_demo_ImPlotWindow = false;
     bool show_another_window    = false;
-
-    // ImPlot setup
-    float f = 0.01;
-    float x_data[1000] = {0};
-    float y_data[1000] = {0};
-    for(int i=0;i<1000;i++){
-        x_data[i] = i;
-        y_data[i] = sin(2*M_PI*f*i);
-    }
-    for(int i=0;i<610;i++){
-        time_data[i] = i;
-    }
 
     // =============================================
     // ------------- END ImGui/ImPlot --------------
@@ -668,7 +417,7 @@ int main()
                 ImGui::Checkbox("Carts", &Figures[CARTS]);
                 ImGui::Checkbox("Angles", &Figures[ANGLES]);
                 ImGui::Checkbox("Raw Sensors", &Figures[RAW_SENSORS]);
-                RealtimePlots(Pitch,Roll,Cart_dist_1,Cart_dist_2);
+                RealtimePlots();
             ImGui::End();
 
             if ( Figures[CARTS] ) {
@@ -858,21 +607,7 @@ int main()
             // UART enable
             ImGui::Checkbox("UART Enable", &UART);
             ImGui::Text("Waiting Packets to be ploted: %d",waiting_packet_num);
-            if (UART) {
-                if (ImGui::TreeNode("Status of UART connection")) {
-                    if (UART_send_status) {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "TX");
-                    } else {
-                        ImGui::TextDisabled("TX");
-                    }
-                    if (UART_recv_status) {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "RX");
-                    } else {
-                        ImGui::TextDisabled("RX");
-                    }
-                    ImGui::TreePop();
-                }
-            }
+
 
 
             ImGui::End();
