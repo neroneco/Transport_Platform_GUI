@@ -106,41 +106,45 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
     static int iter = 0;
     static int packet_num = 0;
     static int seconds = 10;
+    static uint64_t time_u64 = 0;
+    static float time_real = 0;
 
 
     if( waiting_packet_num > 0){
         for ( int i = 0; i<100; i++) {
             if ( 2*waiting_packet_num > i ) {
-                t += 0.005;
+                time_u64 += 4;
+                time_real = ((float)time_u64)*(0.001f);
+                t = time_real;
 
-                scroll_data[CARTS_POS_X].AddPoint(t,          data_pack[packet_num].carts_pos_x[iter]);
-                scroll_data[CARTS_POS_Y].AddPoint(t,          data_pack[packet_num].carts_pos_y[iter]);
-                scroll_data[CARTS_VEL_X].AddPoint(t,          data_pack[packet_num].carts_vel_x[iter]);
-                scroll_data[CARTS_VEL_Y].AddPoint(t,          data_pack[packet_num].carts_vel_y[iter]);
-                scroll_data[CARTS_ACC_X].AddPoint(t,          data_pack[packet_num].carts_acc_x[iter]);
-                scroll_data[CARTS_ACC_Y].AddPoint(t,          data_pack[packet_num].carts_acc_y[iter]);
-                scroll_data[MPU9250_ACCE_X].AddPoint(t,       data_pack[packet_num].mpu9250_acce_x[iter]);
-                scroll_data[MPU9250_ACCE_Y].AddPoint(t,       data_pack[packet_num].mpu9250_acce_y[iter]);
-                scroll_data[MPU9250_ACCE_Z].AddPoint(t,       data_pack[packet_num].mpu9250_acce_z[iter]);
-                scroll_data[MPU9250_GYRO_X].AddPoint(t,       data_pack[packet_num].mpu9250_gyro_x[iter]);
-                scroll_data[MPU9250_GYRO_Y].AddPoint(t,       data_pack[packet_num].mpu9250_gyro_y[iter]);
-                scroll_data[MPU9250_GYRO_Z].AddPoint(t,       data_pack[packet_num].mpu9250_gyro_z[iter]);
-                scroll_data[MPU6886_ACCE_X].AddPoint(t,       data_pack[packet_num].mpu6886_acce_x[iter]);
-                scroll_data[MPU6886_ACCE_Y].AddPoint(t,       data_pack[packet_num].mpu6886_acce_y[iter]);
-                scroll_data[MPU6886_ACCE_Z].AddPoint(t,       data_pack[packet_num].mpu6886_acce_z[iter]);
-                scroll_data[MPU6886_GYRO_X].AddPoint(t,       data_pack[packet_num].mpu6886_gyro_x[iter]);
-                scroll_data[MPU6886_GYRO_Y].AddPoint(t,       data_pack[packet_num].mpu6886_gyro_y[iter]);
-                scroll_data[MPU6886_GYRO_Z].AddPoint(t,       data_pack[packet_num].mpu6886_gyro_z[iter]);
-                scroll_data[PITCH_NO_FILTER].AddPoint(t,      data_pack[packet_num].pitch_no_filter[iter]);
-                scroll_data[ROLL_NO_FILTER].AddPoint(t,       data_pack[packet_num].roll_no_filter[iter]);
-                scroll_data[PITCH_COMPLEMENTARY].AddPoint(t,  data_pack[packet_num].pitch_complementary[iter]);
-                scroll_data[ROLL_COMPLEMENTARY].AddPoint(t,   data_pack[packet_num].roll_complementary[iter]);
-                scroll_data[PITCH_ALFA_BETA].AddPoint(t,      data_pack[packet_num].pitch_alfa_beta[iter]);
-                scroll_data[ROLL_ALFA_BETA].AddPoint(t,       data_pack[packet_num].roll_alfa_beta[iter]);
-                scroll_data[PITCH_KALMAN].AddPoint(t,         data_pack[packet_num].pitch_kalman[iter]);
-                scroll_data[ROLL_KALMAN].AddPoint(t,          data_pack[packet_num].roll_kalman[iter]);
-                scroll_data[PITCH].AddPoint(t,                data_pack[packet_num].pitch[iter]);
-                scroll_data[ROLL].AddPoint(t,                 data_pack[packet_num].roll[iter]);
+                scroll_data[CARTS_POS_X].AddPoint(time_real,          data_pack[packet_num].carts_pos_x[iter]);
+                scroll_data[CARTS_POS_Y].AddPoint(time_real,          data_pack[packet_num].carts_pos_y[iter]);
+                scroll_data[CARTS_VEL_X].AddPoint(time_real,          data_pack[packet_num].carts_vel_x[iter]);
+                scroll_data[CARTS_VEL_Y].AddPoint(time_real,          data_pack[packet_num].carts_vel_y[iter]);
+                scroll_data[CARTS_ACC_X].AddPoint(time_real,          data_pack[packet_num].carts_acc_x[iter]);
+                scroll_data[CARTS_ACC_Y].AddPoint(time_real,          data_pack[packet_num].carts_acc_y[iter]);
+                scroll_data[MPU9250_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_x[iter]);
+                scroll_data[MPU9250_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_y[iter]);
+                scroll_data[MPU9250_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_z[iter]);
+                scroll_data[MPU9250_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_x[iter]);
+                scroll_data[MPU9250_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_y[iter]);
+                scroll_data[MPU9250_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_z[iter]);
+                scroll_data[MPU6886_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_x[iter]);
+                scroll_data[MPU6886_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_y[iter]);
+                scroll_data[MPU6886_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_z[iter]);
+                scroll_data[MPU6886_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_x[iter]);
+                scroll_data[MPU6886_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_y[iter]);
+                scroll_data[MPU6886_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_z[iter]);
+                scroll_data[PITCH_NO_FILTER].AddPoint(time_real,      data_pack[packet_num].pitch_no_filter[iter]);
+                scroll_data[ROLL_NO_FILTER].AddPoint(time_real,       data_pack[packet_num].roll_no_filter[iter]);
+                scroll_data[PITCH_COMPLEMENTARY].AddPoint(time_real,  data_pack[packet_num].pitch_complementary[iter]);
+                scroll_data[ROLL_COMPLEMENTARY].AddPoint(time_real,   data_pack[packet_num].roll_complementary[iter]);
+                scroll_data[PITCH_ALFA_BETA].AddPoint(time_real,      data_pack[packet_num].pitch_alfa_beta[iter]);
+                scroll_data[ROLL_ALFA_BETA].AddPoint(time_real,       data_pack[packet_num].roll_alfa_beta[iter]);
+                scroll_data[PITCH_KALMAN].AddPoint(time_real,         data_pack[packet_num].pitch_kalman[iter]);
+                scroll_data[ROLL_KALMAN].AddPoint(time_real,          data_pack[packet_num].roll_kalman[iter]);
+                scroll_data[PITCH].AddPoint(time_real,                data_pack[packet_num].pitch[iter]);
+                scroll_data[ROLL].AddPoint(time_real,                 data_pack[packet_num].roll[iter]);
 
                 iter++;
                 iter %= 250; 
@@ -165,8 +169,8 @@ void graphs_carts( ScrollingBuffer* scroll_data ) {
     if(scroll_data[CARTS_POS_X].Data.size()!=0){
         if (ImPlot::BeginPlot("##Scrolling_11", ImVec2(400,250))) {
             ImPlot::SetupAxes("time [s]", "Position [mm]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
+            ImPlot::SetupAxisLimits(ImAxis_X1, t - history, t, ImGuiCond_Always);
+            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 365);
             //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
             ImPlot::PlotLine("Cart X", &scroll_data[CARTS_POS_X].Data[0].x, &scroll_data[CARTS_POS_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
             ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_POS_Y].Data[0].x, &scroll_data[CARTS_POS_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));

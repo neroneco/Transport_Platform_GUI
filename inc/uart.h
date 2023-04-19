@@ -124,7 +124,111 @@ SSIZE_T read_port(HANDLE port, uint8_t * buffer, size_t size)
 // |  sy100   | set speed of y axis |
 // +--------------------------------+
 
+enum MPU_SAMPLING_RATE {
+    RATE_1kHZ,
+    RATE_4kHZ,
+    RATE_8kHZ,
+    RATE_32kHZ
+};
+
+enum MPU_ACCEL_SCALE {
+    SCALE_2g,
+    SCALE_4g,
+    SCALE_8g,
+    SCALE_16g
+};
+
+enum MPU_GYRO_SCALE {
+    SCALE_250dps,
+    SCALE_500dps,
+    SCALE_1000dps,
+    SCALE_2000dps
+};
+
+enum MPU_DLPF {
+    MPU_DLPF_NONE,
+    MPU_DLPF_5HZ,
+    MPU_DLPF_5_1HZ,
+    MPU_DLPF_10HZ,
+    MPU_DLPF_10_2HZ,
+    MPU_DLPF_20HZ,
+    MPU_DLPF_21_2HZ,
+    MPU_DLPF_41HZ,
+    MPU_DLPF_44_8HZ,
+    MPU_DLPF_92HZ,
+    MPU_DLPF_99HZ,
+    MPU_DLPF_176HZ,
+    MPU_DLPF_184HZ,
+    MPU_DLPF_218_1HZ,
+    MPU_DLPF_250HZ,
+    MPU_DLPF_420HZ,
+    MPU_DLPF_460HZ,
+    MPU_DLPF_1046HZ,
+    MPU_DLPF_1130HZ,
+    MPU_DLPF_3281HZ,
+    MPU_DLPF_3600HZ,
+    MPU_DLPF_8173HZ,
+    MPU_DLPF_8800HZ
+};
+
+
+enum IMU_SAMPLING_RATE {
+    RATE_100HZ,
+    RATE_200HZ,
+    RATE_250HZ,
+    RATE_400HZ,
+    RATE_500HZ,
+};
+
+enum FILTER_TYPE {
+    NONE,
+    COMPLEMENTARY,
+    ALFA_BETA,
+    KALMAN,
+    ALL
+};
+
+enum STEP_MOTOR {
+    STEP_16,
+    STEP_8,
+    STEP_4,
+    STEP_2,
+    STEP_FULL
+};
+
+
 typedef struct {
+    uint8_t sampling_rate;
+    uint8_t scale_accel;
+    uint8_t scale_gyro;
+    uint8_t dlpf_accel;
+    uint8_t dlpf_gyro;
+} mpu_status;
+
+typedef struct {
+    uint8_t sampling_rate;
+    uint8_t filter_type;
+} imu_status;
+
+typedef struct {
+    float cart_x_mass;
+    float cart_y_mass;
+    int   steps;
+    float max_x_position;
+    float max_y_position;
+    float max_speed;
+    float max_accel;
+} carts_status;
+
+typedef struct {
+    mpu_status      mpu9250;
+    mpu_status      mpu6886;
+    imu_status      imu;
+    carts_status    carts;
+} system_status_struct;
+
+typedef struct {
+    system_status_struct sytem_status;
     float carts_pos_x[250];
     float carts_pos_y[250];
     float carts_vel_x[250];
@@ -157,6 +261,7 @@ typedef struct {
     float pitch[250];
     float roll[250];
 } data_packet_struct;
+
 
 enum MSG_TYPE {
     MSG_NONE,
@@ -195,8 +300,9 @@ extern uint32_t position  ;
 
 extern int msg_type   ;
 
-extern int waiting_packet_num             ;
-extern data_packet_struct Data_Packet[10] ;
+extern int waiting_packet_num ;
+extern data_packet_struct       Data_Packet[10]    ;
+extern system_status_struct     System_Status_Data ;
 
 void UART_communication(void)
 {
@@ -307,9 +413,10 @@ void UART_communication(void)
                     UART = 0;
                     break;
                 } else {
+                    memcpy( &System_Status_Data, &Data_Packet[packet_num].sytem_status, sizeof(system_status_struct) );
                     packet_num++;
                     packet_num %= 10;
-                    printf("suprise!!! : %3.f %d \n", Data_Packet[0].carts_pos_x[7], packet_num);
+                    printf("suprise!!! : %3.f %d \n system_status_imu_filter_type %.3f \n", Data_Packet[0].carts_pos_x[7], packet_num, Data_Packet[0].sytem_status.carts.max_x_position);
                 }
 
                 waiting_packet_num++;

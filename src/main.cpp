@@ -30,8 +30,9 @@ uint32_t x_cart_pos = 215;
 uint32_t y_cart_pos = 215;
 
 
-
-data_packet_struct      Data_Packet[10]  = {0};
+// TODO get rid of global variables (if possible)
+data_packet_struct      Data_Packet[10]     = {0};
+system_status_struct    System_Status_Data  = {0};
 
 
 // UART 
@@ -167,13 +168,10 @@ int main()
         if (show_demo_ImPlotWindow)
             ImPlot::ShowDemoWindow(&show_demo_ImPlotWindow);
         
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        // -+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-
+        // ----------------- Windows -------------------
+        // -+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-
         {
-            
-            static float f = 0.0f;
-            static int counter = 0;
-
-
             // Figures window
             //ImGui::SetNextWindowSize(ImVec2(840,580));
             //ImGui::SetNextWindowPos(ImVec2(10,10));
@@ -236,9 +234,13 @@ int main()
                 ImGui::Checkbox("UART Enable", &UART);
                 ImGui::Text("Waiting Packets to be ploted: %d",waiting_packet_num);
             ImGui::End();
+            
+            ImGui::Begin("System Status",NULL,ImGuiWindowFlags_None);
+                //print_system_status( sdata );
+            ImGui::End();
 
             // Cart control window
-            ImGui::Begin("Cart control",NULL,ImGuiWindowFlags_None);
+            ImGui::Begin("Cart Control",NULL,ImGuiWindowFlags_None);
                 static int ctrl_mod = 0;
                 if (ImGui::Combo("Control mode", &ctrl_mod, "Automatic\0Manual\0"))
                 {
@@ -350,6 +352,8 @@ int main()
             ImGui::End();
 
             // Help window
+            static float f = 0.0f;
+            static int counter = 0;
             ImGui::Begin("Help",NULL,ImGuiWindowFlags_None); 
             ImGui::Text("This is some useful text.");                         // Display some text (you can use a format strings too)
             ImGui::Checkbox("ImGui Demo Window", &show_demo_ImGuiWindow);     // Edit bools storing our window open/close state
