@@ -234,9 +234,9 @@ int main()
                 ImGui::Checkbox("UART Enable", &UART);
                 ImGui::Text("Waiting Packets to be ploted: %d",waiting_packet_num);
             ImGui::End();
-            
+
             ImGui::Begin("System Status",NULL,ImGuiWindowFlags_None);
-                //print_system_status( sdata );
+                print_system_status( &System_Status_Data );
             ImGui::End();
 
             // Cart control window

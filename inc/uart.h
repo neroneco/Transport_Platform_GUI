@@ -416,7 +416,7 @@ void UART_communication(void)
                     memcpy( &System_Status_Data, &Data_Packet[packet_num].sytem_status, sizeof(system_status_struct) );
                     packet_num++;
                     packet_num %= 10;
-                    printf("suprise!!! : %3.f %d \n system_status_imu_filter_type %.3f \n", Data_Packet[0].carts_pos_x[7], packet_num, Data_Packet[0].sytem_status.carts.max_x_position);
+                    printf("suprise!!! : %3.f %d \n system_status_imu_filter_type %.3f \n", Data_Packet[0].carts_pos_x[7], packet_num, System_Status_Data.carts.cart_y_mass);
                 }
 
                 waiting_packet_num++;
@@ -427,6 +427,37 @@ void UART_communication(void)
         printf("hello from thread\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+}
+
+void print_system_status( system_status_struct* system_status_data )
+{
+    ImGui::SeparatorText("MPU9250");
+        ImGui::Text("sampling rate"); ImGui::SameLine(); 
+        ImGui::Text("accelerometer scale"); ImGui::SameLine();
+        ImGui::Text("gyroscope scale"); ImGui::SameLine();
+        ImGui::Text("accelerometer dlpf bandwidth"); ImGui::SameLine();
+        ImGui::Text("gyroscope dlpf bandwidth");
+    ImGui::SeparatorText("MPU6886");
+        ImGui::Text("sampling rate"); ImGui::SameLine();
+        ImGui::Text("accelerometer scale"); ImGui::SameLine();
+        ImGui::Text("gyroscope scale"); ImGui::SameLine();
+        ImGui::Text("accelerometer dlpf bandwidth"); ImGui::SameLine();
+        ImGui::Text("gyroscope dlpf bandwidth");
+    ImGui::SeparatorText("IMU");
+        ImGui::Text("sampling rate");   ImGui::SameLine();
+        ImGui::Text("filter type");
+    ImGui::SeparatorText("CARTS");
+        ImGui::Text("microsteps");              ImGui::SameLine(); 
+        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->carts.steps);
+        ImGui::Text("cart X max position");     ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_x_position);
+        ImGui::LabelText("cart X max position", "%.3f", system_status_data->carts.max_x_position);
+        ImGui::Text("cart Y max position");     ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_y_position);
+        ImGui::Text("cart X max speed");        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_speed);
+        ImGui::Text("cart Y max acceleration"); ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_accel);
 }
 
 
