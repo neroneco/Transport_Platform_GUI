@@ -63,6 +63,4 @@ clean:
 	if exist obj\*.o        del   obj\*.o
 	if exist bin\*.exe      del   bin\*.exe
 	if exist bin\*.dll      del   bin\*.dll
-	if exist bin\*.ini      del   bin\*.ini
 	if exist obj            rmdir obj
-	if exist bin            rmdir bin
