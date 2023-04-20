@@ -431,33 +431,148 @@ void UART_communication(void)
 
 void print_system_status( system_status_struct* system_status_data )
 {
-    ImGui::SeparatorText("MPU9250");
-        ImGui::Text("sampling rate"); ImGui::SameLine(); 
-        ImGui::Text("accelerometer scale"); ImGui::SameLine();
-        ImGui::Text("gyroscope scale"); ImGui::SameLine();
-        ImGui::Text("accelerometer dlpf bandwidth"); ImGui::SameLine();
-        ImGui::Text("gyroscope dlpf bandwidth");
-    ImGui::SeparatorText("MPU6886");
-        ImGui::Text("sampling rate"); ImGui::SameLine();
-        ImGui::Text("accelerometer scale"); ImGui::SameLine();
-        ImGui::Text("gyroscope scale"); ImGui::SameLine();
-        ImGui::Text("accelerometer dlpf bandwidth"); ImGui::SameLine();
-        ImGui::Text("gyroscope dlpf bandwidth");
-    ImGui::SeparatorText("IMU");
-        ImGui::Text("sampling rate");   ImGui::SameLine();
-        ImGui::Text("filter type");
-    ImGui::SeparatorText("CARTS");
-        ImGui::Text("microsteps");              ImGui::SameLine(); 
-        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->carts.steps);
-        ImGui::Text("cart X max position");     ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_x_position);
-        ImGui::LabelText("cart X max position", "%.3f", system_status_data->carts.max_x_position);
-        ImGui::Text("cart Y max position");     ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_y_position);
-        ImGui::Text("cart X max speed");        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_speed);
-        ImGui::Text("cart Y max acceleration"); ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_accel);
+    static ImGuiTableFlags tab_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_NoHostExtendX;
+    if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
+    {
+        if (ImGui::BeginTabItem("MPU9250"))
+        {
+            if (ImGui::BeginTable("table_mpu9250", 2, tab_flags))
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("sampling rate");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu9250.sampling_rate);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("accelerometer scale");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu9250.scale_accel);
+                
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("gyroscope scale");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu9250.scale_gyro);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("accelerometer dlpf bandwidth");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu9250.dlpf_accel);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("gyroscope dlpf bandwidth");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu9250.dlpf_gyro);
+
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("MPU6886"))
+        {
+            if (ImGui::BeginTable("table_mpu6886", 2, tab_flags))
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("sampling rate");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu6886.sampling_rate);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("accelerometer scale");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu6886.scale_accel);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("gyroscope scale");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu6886.scale_gyro);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("accelerometer dlpf bandwidth");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu6886.dlpf_accel);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("gyroscope dlpf bandwidth");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->mpu6886.dlpf_gyro);
+
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("IMU"))
+        {
+            if (ImGui::BeginTable("table_imu", 2, tab_flags))
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("sampling rate");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->imu.sampling_rate);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("filter type");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->imu.filter_type);
+                
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("CARTS"))
+        {
+            if (ImGui::BeginTable("table_carts", 2, tab_flags))
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("microsteps"); 
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%d", system_status_data->carts.steps);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("cart X max position");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_x_position);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();            
+                ImGui::Text("cart Y max position");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_y_position);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("cart X max speed");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_speed);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("cart Y max acceleration");
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", system_status_data->carts.max_accel);
+
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
 }
 
 
