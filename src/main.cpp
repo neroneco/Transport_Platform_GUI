@@ -37,6 +37,7 @@ system_status_struct    System_Status_Data  = {0};
 
 // UART 
 bool end_thread_01 = 0;
+bool end_thread_02 = 0;
 bool UART = 0;
 char* device = "\\\\.\\COM3";
 uint32_t baud_rate = 900000;
@@ -149,6 +150,7 @@ int main()
 
     // thread creation
     std::thread thr_01(UART_communication);
+    std::thread thr_02(graphs_store_data_thread, sdata, Data_Packet, 1);
 
 
     // -+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-
@@ -167,7 +169,7 @@ int main()
 
         if (show_demo_ImPlotWindow)
             ImPlot::ShowDemoWindow(&show_demo_ImPlotWindow);
-        
+
         // -+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-
         // ----------------- Windows -------------------
         // -+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-
@@ -185,7 +187,7 @@ int main()
                 ImGui::Checkbox("Carts",        &Figures[CARTS]);
                 ImGui::Checkbox("Angles",       &Figures[ANGLES]);
                 ImGui::Checkbox("Raw Sensors",  &Figures[RAW_SENSORS]);
-                graphs_store_data( sdata, Data_Packet );
+                //graphs_store_data( sdata, Data_Packet );
             ImGui::End();
 
             if ( Figures[CARTS] ) {
@@ -385,11 +387,18 @@ int main()
         glfwSwapBuffers(window);
     }
     end_thread_01 = 1;
+    end_thread_02 = 1;
+
     UART = 0;
     while(!thr_01.joinable());
     if(thr_01.joinable()){
         printf("Ending UART thread\n");
         thr_01.join();
+    }
+    while(!thr_02.joinable());
+    if(thr_02.joinable()){
+        printf("Ending graph_store_data thread\n");
+        thr_02.join();
     }
 
     ImPlot::DestroyContext();

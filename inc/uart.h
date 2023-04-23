@@ -229,37 +229,37 @@ typedef struct {
 
 typedef struct {
     system_status_struct sytem_status;
-    float carts_pos_x[250];
-    float carts_pos_y[250];
-    float carts_vel_x[250];
-    float carts_vel_y[250];
-    float carts_acc_x[250];
-    float carts_acc_y[250];
+    float carts_pos_x[100];
+    float carts_pos_y[100];
+    float carts_vel_x[100];
+    float carts_vel_y[100];
+    float carts_acc_x[100];
+    float carts_acc_y[100];
 #if 1
-    float mpu9250_acce_x[250];
-    float mpu9250_acce_y[250];
-    float mpu9250_acce_z[250];
-    float mpu9250_gyro_x[250];
-    float mpu9250_gyro_y[250];
-    float mpu9250_gyro_z[250];
+    float mpu9250_acce_x[100];
+    float mpu9250_acce_y[100];
+    float mpu9250_acce_z[100];
+    float mpu9250_gyro_x[100];
+    float mpu9250_gyro_y[100];
+    float mpu9250_gyro_z[100];
 
-    float mpu6886_acce_x[250];
-    float mpu6886_acce_y[250];
-    float mpu6886_acce_z[250];
-    float mpu6886_gyro_x[250];
-    float mpu6886_gyro_y[250];
-    float mpu6886_gyro_z[250];
+    float mpu6886_acce_x[100];
+    float mpu6886_acce_y[100];
+    float mpu6886_acce_z[100];
+    float mpu6886_gyro_x[100];
+    float mpu6886_gyro_y[100];
+    float mpu6886_gyro_z[100];
 #endif
-    float pitch_no_filter[250];
-    float roll_no_filter[250];
-    float pitch_complementary[250];
-    float roll_complementary[250];
-    float pitch_alfa_beta[250];
-    float roll_alfa_beta[250];
-    float pitch_kalman[250];
-    float roll_kalman[250];
-    float pitch[250];
-    float roll[250];
+    float pitch_no_filter[100];
+    float roll_no_filter[100];
+    float pitch_complementary[100];
+    float roll_complementary[100];
+    float pitch_alfa_beta[100];
+    float roll_alfa_beta[100];
+    float pitch_kalman[100];
+    float roll_kalman[100];
+    float pitch[100];
+    float roll[100];
 } data_packet_struct;
 
 
@@ -424,7 +424,7 @@ void UART_communication(void)
 
             CloseHandle(port);
         }
-        printf("hello from thread\n");
+        printf("hello from UART thread \n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }

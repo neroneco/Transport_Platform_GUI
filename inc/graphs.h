@@ -1,6 +1,10 @@
 #ifndef GRAPHS_H
 #define GRAPHS_H
 
+#include <stdio.h>
+#include <stdint.h>
+#include <windows.h>
+
 // utility structure for realtime plot
 struct ScrollingBuffer {
     int MaxSize;
@@ -112,7 +116,7 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
 
     if( waiting_packet_num > 0){
         for ( int i = 0; i<100; i++) {
-            if ( 2*waiting_packet_num > i ) {
+            if ( 2*waiting_packet_num > 3*i ) {
                 time_u64 += 4;
                 time_real = ((float)time_u64)*(0.001f);
                 t = time_real;
@@ -147,7 +151,7 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
                 scroll_data[ROLL].AddPoint(time_real,                 data_pack[packet_num].roll[iter]);
 
                 iter++;
-                iter %= 250; 
+                iter %= 100; 
                 if(iter == 0){
                     waiting_packet_num--;
                     packet_num++;
@@ -156,6 +160,83 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
             } else {
                 break;
             }
+        }
+    }
+}
+
+extern bool end_thread_02;
+
+void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct* data_pack, int wait_period ) {
+
+    static int      iter        = 0  ;
+    static int      packet_num  = 0  ;
+    static uint64_t time_u64    = 0  ;
+    static float    time_real   = 0  ;
+
+    while(!end_thread_02) {
+
+        if( waiting_packet_num > 0){
+
+            // Get start time
+            auto start_time = std::chrono::steady_clock::now();
+            // Get end time
+            auto end_time = start_time + std::chrono::microseconds(10000-(200*waiting_packet_num));
+
+            // Here happens the actual update stuff
+            time_u64 += 10;
+            time_real = ((float)time_u64)*(0.001f);
+            t = time_real;
+
+            scroll_data[CARTS_POS_X].AddPoint(time_real,          data_pack[packet_num].carts_pos_x[iter]);
+            scroll_data[CARTS_POS_Y].AddPoint(time_real,          data_pack[packet_num].carts_pos_y[iter]);
+            scroll_data[CARTS_VEL_X].AddPoint(time_real,          data_pack[packet_num].carts_vel_x[iter]);
+            scroll_data[CARTS_VEL_Y].AddPoint(time_real,          data_pack[packet_num].carts_vel_y[iter]);
+            scroll_data[CARTS_ACC_X].AddPoint(time_real,          data_pack[packet_num].carts_acc_x[iter]);
+            scroll_data[CARTS_ACC_Y].AddPoint(time_real,          data_pack[packet_num].carts_acc_y[iter]);
+            scroll_data[MPU9250_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_x[iter]);
+            scroll_data[MPU9250_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_y[iter]);
+            scroll_data[MPU9250_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_acce_z[iter]);
+            scroll_data[MPU9250_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_x[iter]);
+            scroll_data[MPU9250_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_y[iter]);
+            scroll_data[MPU9250_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_z[iter]);
+            scroll_data[MPU6886_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_x[iter]);
+            scroll_data[MPU6886_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_y[iter]);
+            scroll_data[MPU6886_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_z[iter]);
+            scroll_data[MPU6886_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_x[iter]);
+            scroll_data[MPU6886_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_y[iter]);
+            scroll_data[MPU6886_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_z[iter]);
+            scroll_data[PITCH_NO_FILTER].AddPoint(time_real,      data_pack[packet_num].pitch_no_filter[iter]);
+            scroll_data[ROLL_NO_FILTER].AddPoint(time_real,       data_pack[packet_num].roll_no_filter[iter]);
+            scroll_data[PITCH_COMPLEMENTARY].AddPoint(time_real,  data_pack[packet_num].pitch_complementary[iter]);
+            scroll_data[ROLL_COMPLEMENTARY].AddPoint(time_real,   data_pack[packet_num].roll_complementary[iter]);
+            scroll_data[PITCH_ALFA_BETA].AddPoint(time_real,      data_pack[packet_num].pitch_alfa_beta[iter]);
+            scroll_data[ROLL_ALFA_BETA].AddPoint(time_real,       data_pack[packet_num].roll_alfa_beta[iter]);
+            scroll_data[PITCH_KALMAN].AddPoint(time_real,         data_pack[packet_num].pitch_kalman[iter]);
+            scroll_data[ROLL_KALMAN].AddPoint(time_real,          data_pack[packet_num].roll_kalman[iter]);
+            scroll_data[PITCH].AddPoint(time_real,                data_pack[packet_num].pitch[iter]);
+            scroll_data[ROLL].AddPoint(time_real,                 data_pack[packet_num].roll[iter]);
+
+            iter++;
+            iter %= 100; 
+            if(iter == 0){
+                waiting_packet_num--;
+                packet_num++;
+                packet_num %= 10;
+            }
+            // Sleep if necessary
+            auto real_end_time_1 = std::chrono::steady_clock::now();
+
+            while(std::chrono::duration_cast<std::chrono::microseconds>(end_time - std::chrono::steady_clock::now()).count() > 0) {
+                 std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+            }
+            auto real_end_time_2 = std::chrono::steady_clock::now();
+            //const std::chrono::duration<double, std::milli> elapsed = real_end_time - start_time;
+            //std::cout << "Elapsed 1: " << std::chrono::duration_cast<std::chrono::microseconds>(real_end_time_1 - start_time).count() << "us \n";
+            //std::cout << "Elapsed 2: " << std::chrono::duration_cast<std::chrono::microseconds>(real_end_time_2 - real_end_time_1).count() << "us \n";
+            //std::this_thread::sleep_for(std::chrono::milliseconds(wait_period));
+        } else {
+            printf("hello from graphs_store_data thread \n");
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     }
 }
