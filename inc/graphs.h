@@ -162,156 +162,207 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
 
 void graphs_carts( ScrollingBuffer* scroll_data ) {
     static float history = 10.0f;
+    static int cond = ImGuiCond_None;
+    static float height;
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
 
-    static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
-    if(scroll_data[CARTS_POS_X].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_11", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Position [mm]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1, t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 365);
-            //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("Cart X", &scroll_data[CARTS_POS_X].Data[0].x, &scroll_data[CARTS_POS_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_POS_Y].Data[0].x, &scroll_data[CARTS_POS_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
-        }
+    if ( UART ) {
+        cond = ImGuiCond_Always;
+    } else {
+        cond = ImGuiCond_None;
     }
-    if(scroll_data[CARTS_VEL_X].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_12", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Velocity [mm/s]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("Cart X", &scroll_data[CARTS_VEL_X].Data[0].x, &scroll_data[CARTS_VEL_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_VEL_Y].Data[0].x, &scroll_data[CARTS_VEL_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+    height = 0.3333 * (ImGui::GetWindowHeight()-70.0);
+    static ImGuiTableFlags tab_flags = ImGuiTableFlags_None ;
+    if (ImGui::BeginTable("carts table", 1, tab_flags))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
+        if(scroll_data[CARTS_POS_X].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_11", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Position [mm]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1, t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 365);
+                //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("Cart X", &scroll_data[CARTS_POS_X].Data[0].x, &scroll_data[CARTS_POS_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_POS_Y].Data[0].x, &scroll_data[CARTS_POS_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
-    }
-    if(scroll_data[CARTS_ACC_X].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_13", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Acceleration [mm/s^2]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("Cart X", &scroll_data[CARTS_ACC_X].Data[0].x, &scroll_data[CARTS_ACC_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_ACC_Y].Data[0].x, &scroll_data[CARTS_ACC_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if(scroll_data[CARTS_VEL_X].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_12", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Velocity [mm/s]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("Cart X", &scroll_data[CARTS_VEL_X].Data[0].x, &scroll_data[CARTS_VEL_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_VEL_Y].Data[0].x, &scroll_data[CARTS_VEL_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if(scroll_data[CARTS_ACC_X].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_13", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Acceleration [mm/s^2]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("Cart X", &scroll_data[CARTS_ACC_X].Data[0].x, &scroll_data[CARTS_ACC_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_ACC_Y].Data[0].x, &scroll_data[CARTS_ACC_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
+        }
+        ImGui::EndTable();
     }
 }
 
 void graphs_angles( ScrollingBuffer* sdata ) {
     static float history = 10.0f;
+    static int cond = ImGuiCond_None;
+    static float height;
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
-
-    static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
-    if(sdata[PITCH_NO_FILTER].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_21", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Pitch [deg]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
-            //ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
-            ImPlot::PlotLine("no filter", &sdata[PITCH_NO_FILTER].Data[0].x, &sdata[PITCH_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("complementary filter", &sdata[PITCH_COMPLEMENTARY].Data[0].x, &sdata[PITCH_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("alfa-beta filter", &sdata[PITCH_ALFA_BETA].Data[0].x, &sdata[PITCH_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("kalman filter", &sdata[PITCH_KALMAN].Data[0].x, &sdata[PITCH_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-
-            ImPlot::EndPlot();
-        }
+    
+    if ( UART ) {
+        cond = ImGuiCond_Always;
+    } else {
+        cond = ImGuiCond_None;
     }
-    ImGui::SameLine();
-    if(sdata[ROLL_NO_FILTER].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_22", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Roll [deg]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
-            //ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
-            ImPlot::PlotLine("no filter", &sdata[ROLL_NO_FILTER].Data[0].x, &sdata[ROLL_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("complementary filter", &sdata[ROLL_COMPLEMENTARY].Data[0].x, &sdata[ROLL_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("alfa-beta filter", &sdata[ROLL_ALFA_BETA].Data[0].x, &sdata[ROLL_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("kalman filter", &sdata[ROLL_KALMAN].Data[0].x, &sdata[ROLL_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+    height = (ImGui::GetWindowHeight()-65.0);
+    static ImGuiTableFlags tab_flags = ImGuiTableFlags_None ;
+    if (ImGui::BeginTable("angles table", 2, tab_flags))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
+        if(sdata[PITCH_NO_FILTER].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_21", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Pitch [deg]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
+                //ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
+                ImPlot::PlotLine("no filter", &sdata[PITCH_NO_FILTER].Data[0].x, &sdata[PITCH_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("complementary filter", &sdata[PITCH_COMPLEMENTARY].Data[0].x, &sdata[PITCH_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("alfa-beta filter", &sdata[PITCH_ALFA_BETA].Data[0].x, &sdata[PITCH_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("kalman filter", &sdata[PITCH_KALMAN].Data[0].x, &sdata[PITCH_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+
+                ImPlot::EndPlot();
+            }
         }
+        ImGui::TableNextColumn();
+        if(sdata[ROLL_NO_FILTER].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_22", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Roll [deg]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
+                //ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
+                ImPlot::PlotLine("no filter", &sdata[ROLL_NO_FILTER].Data[0].x, &sdata[ROLL_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("complementary filter", &sdata[ROLL_COMPLEMENTARY].Data[0].x, &sdata[ROLL_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("alfa-beta filter", &sdata[ROLL_ALFA_BETA].Data[0].x, &sdata[ROLL_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("kalman filter", &sdata[ROLL_KALMAN].Data[0].x, &sdata[ROLL_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
+        }
+        ImGui::EndTable();
     }
 }
 
 void graphs_raw_sensors( ScrollingBuffer* sdata ) {
     static float history = 10.0f;
+    static int cond = ImGuiCond_None;
+    static float height;
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
 
-    static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
-    if(sdata[MPU9250_ACCE_X].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_31", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Acceleration X [m/s^2]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
-            //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_X].Data[0].x, &sdata[MPU9250_ACCE_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_X].Data[0].x, &sdata[MPU6886_ACCE_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
-        }
+    if ( UART ) {
+        cond = ImGuiCond_Always;
+    } else {
+        cond = ImGuiCond_None;
     }
-    ImGui::SameLine();
-    if(sdata[MPU9250_ACCE_Y].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_32", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Acceleration Y [m/s^2]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_Y].Data[0].x, &sdata[MPU9250_ACCE_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_Y].Data[0].x, &sdata[MPU6886_ACCE_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+    height = 0.5 * (ImGui::GetWindowHeight()-70.0);
+    static ImGuiTableFlags tab_flags = ImGuiTableFlags_None ;
+    if (ImGui::BeginTable("mpu table", 3, tab_flags))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
+        if(sdata[MPU9250_ACCE_X].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_31", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Acceleration X [m/s^2]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
+                //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_X].Data[0].x, &sdata[MPU9250_ACCE_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_X].Data[0].x, &sdata[MPU6886_ACCE_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
-    }
-    ImGui::SameLine();
-    if(sdata[MPU9250_ACCE_Z].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_33", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Acceleration Z [m/s^2]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_Z].Data[0].x, &sdata[MPU9250_ACCE_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_Z].Data[0].x, &sdata[MPU6886_ACCE_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+        ImGui::TableNextColumn();
+        if(sdata[MPU9250_ACCE_Y].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_32", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Acceleration Y [m/s^2]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_Y].Data[0].x, &sdata[MPU9250_ACCE_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_Y].Data[0].x, &sdata[MPU6886_ACCE_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
-    }
-    if(sdata[MPU9250_GYRO_X].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_34", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Gyro X [deg/s]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
-            //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_X].Data[0].x, &sdata[MPU9250_GYRO_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_X].Data[0].x, &sdata[MPU6886_GYRO_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+        ImGui::TableNextColumn();
+        if(sdata[MPU9250_ACCE_Z].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_33", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Acceleration Z [m/s^2]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ACCE_Z].Data[0].x, &sdata[MPU9250_ACCE_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ACCE_Z].Data[0].x, &sdata[MPU6886_ACCE_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
-    }
-    ImGui::SameLine();
-    if(sdata[MPU9250_GYRO_Y].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_35", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Gyro Y [deg/s]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_Y].Data[0].x, &sdata[MPU9250_GYRO_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_Y].Data[0].x, &sdata[MPU6886_GYRO_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if(sdata[MPU9250_GYRO_X].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_34", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Gyro X [deg/s]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,365);
+                //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_X].Data[0].x, &sdata[MPU9250_GYRO_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_X].Data[0].x, &sdata[MPU6886_GYRO_X].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
-    }
-    ImGui::SameLine();
-    if(sdata[MPU9250_GYRO_Z].Data.size()!=0){
-        if (ImPlot::BeginPlot("##Scrolling_36", ImVec2(400,250))) {
-            ImPlot::SetupAxes("time [s]", "Gyro Z [deg/s]", flags, flags);
-            ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
-            ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
-            //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
-            ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_Z].Data[0].x, &sdata[MPU9250_GYRO_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_Z].Data[0].x, &sdata[MPU6886_GYRO_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-            ImPlot::EndPlot();
+        ImGui::TableNextColumn();
+        if(sdata[MPU9250_GYRO_Y].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_35", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Gyro Y [deg/s]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_Y].Data[0].x, &sdata[MPU9250_GYRO_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_Y].Data[0].x, &sdata[MPU6886_GYRO_Y].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
+        ImGui::TableNextColumn();
+        if(sdata[MPU9250_GYRO_Z].Data.size()!=0){
+            if (ImPlot::BeginPlot("##Scrolling_36", ImVec2(-1,height))) {
+                ImPlot::SetupAxes("time [s]", "Gyro Z [deg/s]", flags, flags);
+                ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, cond);
+                ImPlot::SetupAxisLimits(ImAxis_Y1,0,165);
+                //ImPlot::SetNextLineStyle(ImVec4(0.853, 1.0, 0.0, 0.784),2.0);
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_GYRO_Z].Data[0].x, &sdata[MPU9250_GYRO_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_GYRO_Z].Data[0].x, &sdata[MPU6886_GYRO_Z].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::EndPlot();
+            }
+        }
+        ImGui::EndTable();
     }
 }
 
