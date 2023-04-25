@@ -491,7 +491,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
             {
                 if ( Save_Data_Status[k] )
                 {
-                    ImGui::LogText("%s ",Data_Names[k]);
+                    ImGui::LogText("%s\t",Data_Names[k]);
                 }
             }
             for (int i=0; i<sdata[CARTS_POS_X].Data.size();i++) 
@@ -501,7 +501,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
                 {
                     if ( Save_Data_Status[k] )
                     {
-                        ImGui::LogText("%.3f ",sdata[k].Data[i].y);
+                        ImGui::LogText("%.3f\t",sdata[k].Data[i].y);
                     }
                 }
             }
