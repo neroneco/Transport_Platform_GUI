@@ -9,16 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct {
-    char n1;
-    char n2;
-    char n3;
-    char n4;
-} test_buf_struct;
-
-test_buf_struct recv_test_buf = {0};
-test_buf_struct send_test_buf = {.n1='a', .n2='b', .n3='c', .n4='d'};
-
 int init_tcp_client(SOCKET* ConnectSocket)
 {
     const char* ip_address  = "127.0.0.1" ;
@@ -106,8 +96,23 @@ void shutdown_tcp_client(SOCKET* ConnectSocket)
     WSACleanup();
 }
 
+typedef struct {
+    char n1;
+    char n2;
+    char n3;
+    char n4;
+} test_buf_struct;
+
+test_buf_struct recv_test_buf = {0};
+test_buf_struct send_test_buf = {.n1='a', .n2='b', .n3='c', .n4='d'};
+
+
 extern bool tcp_client_run        ;
 extern bool end_thread_tcp_client ;
+
+extern int waiting_packet_num ;
+extern data_packet_struct       Data_Packet[10]    ;
+extern system_status_struct     System_Status_Data ;
 
 void tcp_client(void)
 {
@@ -129,14 +134,21 @@ void tcp_client(void)
                     break;
                 }
 
-                iResult = recv(socket_client, (char*)&recv_test_buf, sizeof(test_buf_struct), 0);
+                static int packet_num = 0;
+                iResult = recv(socket_client, (char*)&Data_Packet[packet_num], sizeof(data_packet_struct), 0);
                 if ( iResult > 0 ) {
-                    printf("Bytes received / expected : %d / %d \n", iResult, sizeof(test_buf_struct));
-                    if ( iResult != sizeof(test_buf_struct) ) {
+                    printf("Bytes received / expected : %d / %d \n", iResult, sizeof(data_packet_struct));
+                    if ( iResult != sizeof(data_packet_struct) ) {
                         break;
                     }
+                    memcpy( &System_Status_Data, &Data_Packet[packet_num].sytem_status, sizeof(system_status_struct) );
+                    packet_num++;
+                    packet_num %= 10;
+                    printf("suprise!!! : %3.f %d \n system_status_imu_filter_type %.3f \n", Data_Packet[0].carts_pos_x[7], packet_num, System_Status_Data.carts.cart_y_mass);
+
                 } else if ( iResult == 0 ) {
                     printf("Connection closed\n");
+                    break;
                 } else {
                     if (WSAGetLastError()==10060) {
                         printf("recv TIMEDOUT\n");
@@ -145,8 +157,8 @@ void tcp_client(void)
                         printf("recv failed with error: %d\n", WSAGetLastError());
                         break;
                     }
-
                 }
+                waiting_packet_num++;
             }
 
             tcp_client_run = 0;
