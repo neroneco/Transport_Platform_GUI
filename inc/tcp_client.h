@@ -131,12 +131,16 @@ void tcp_client(void)
 
                 iResult = recv(socket_client, (char*)&recv_test_buf, sizeof(test_buf_struct), 0);
                 if ( iResult > 0 ) {
-                    printf("Bytes received: %d\n", iResult);
+                    printf("Bytes received / expected : %d / %d \n", iResult, sizeof(test_buf_struct));
+                    if ( iResult != sizeof(test_buf_struct) ) {
+                        break;
+                    }
                 } else if ( iResult == 0 ) {
                     printf("Connection closed\n");
                 } else {
                     if (WSAGetLastError()==10060) {
                         printf("recv TIMEDOUT\n");
+                        break;
                     } else {
                         printf("recv failed with error: %d\n", WSAGetLastError());
                         break;
@@ -145,6 +149,7 @@ void tcp_client(void)
                 }
             }
 
+            tcp_client_run = 0;
             shutdown_tcp_client( &socket_client );
         }
         printf("hello from TCP server thread \n");
