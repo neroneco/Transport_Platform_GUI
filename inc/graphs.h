@@ -241,6 +241,9 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
     }
 }
 
+extern bool UART;
+extern bool tcp_client_run;
+
 void graphs_carts( ScrollingBuffer* scroll_data ) {
     static float history = 10.0f;
     static int cond = ImGuiCond_None;
@@ -248,7 +251,7 @@ void graphs_carts( ScrollingBuffer* scroll_data ) {
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
 
-    if ( UART ) {
+    if ( UART || tcp_client_run ) {
         cond = ImGuiCond_Always;
     } else {
         cond = ImGuiCond_None;
@@ -308,7 +311,7 @@ void graphs_angles( ScrollingBuffer* sdata ) {
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
     
-    if ( UART ) {
+    if ( UART || tcp_client_run ) {
         cond = ImGuiCond_Always;
     } else {
         cond = ImGuiCond_None;
@@ -359,7 +362,7 @@ void graphs_raw_sensors( ScrollingBuffer* sdata ) {
     ImGui::PushItemWidth(300);
     ImGui::SliderFloat("History",&history,1,60,"%.1f s",ImGuiSliderFlags_None);
 
-    if ( UART ) {
+    if ( UART || tcp_client_run ) {
         cond = ImGuiCond_Always;
     } else {
         cond = ImGuiCond_None;

@@ -11,8 +11,8 @@
 
 int init_tcp_client(SOCKET* ConnectSocket)
 {
-    const char* ip_address  = "127.0.0.1" ;
-    const char* port        = "27015"     ;
+    const char* ip_address  = "192.168.1.111" ;
+    const char* port        = "7"     ;
     WSADATA wsaData;
     struct addrinfo *result = NULL,
                     *ptr = NULL,
