@@ -17,6 +17,7 @@
 #include "linmath.h"
 #include "uart.h"
 #include "graphs.h"
+#include "tcp_client.h"
 
 
 
@@ -36,11 +37,15 @@ system_status_struct    System_Status_Data  = {0};
 
 
 // UART 
-bool end_thread_01 = 0;
-bool end_thread_02 = 0;
-bool UART = 0;
-char* device = "\\\\.\\COM3";
-uint32_t baud_rate = 900000;
+bool end_thread_01 = 0 ;
+bool end_thread_02 = 0 ;
+bool UART = 0 ;
+char* device = "\\\\.\\COM3" ;
+uint32_t baud_rate = 900000  ;
+
+// TCP/IP
+bool end_thread_tcp_client  = 0 ;
+bool tcp_client_run         = 0 ;
 
 
 int waiting_packet_num = 0;
@@ -149,6 +154,7 @@ int main()
     // UART init
 
     // thread creation
+    std::thread thr_tcp_client(tcp_client);
     std::thread thr_01(UART_communication);
     std::thread thr_02(graphs_store_data_thread, sdata, Data_Packet, 1);
 
@@ -206,6 +212,34 @@ int main()
                     graphs_raw_sensors( sdata );
                 ImGui::End();
             }
+
+            // TCP SERVER window
+            ImGui::Begin("TCP/IP Communication",NULL,ImGuiWindowFlags_None);
+                ImGui::SeparatorText("TCP/IP configuration");
+                // IP address
+                static char buf_ip[66] = "";
+                //sprintf(buf_uart,"%d",baud_rate); 
+                ImGui::InputText("IP address",buf_ip, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+                    //baud_rate = std::stoi(buf_ip);
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    baud_rate = 0;
+                }
+                // TCP port
+                static char buf_port[66] = "";
+                //sprintf(buf_port,device);
+                ImGui::InputText("TCP port",buf_port, 64, ImGuiInputTextFlags_CharsDecimal);
+                try {
+
+                } catch(std::invalid_argument& e) {
+                    ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                    baud_rate = 0;
+                }
+
+                // UART enable
+                ImGui::Checkbox("TCP/IP Enable", &tcp_client_run);
+            ImGui::End();
 
             // UART window
             ImGui::Begin("Serial Comunication",NULL,ImGuiWindowFlags_None);
@@ -386,8 +420,17 @@ int main()
 
         glfwSwapBuffers(window);
     }
+
+    end_thread_tcp_client = 1;
     end_thread_01 = 1;
     end_thread_02 = 1;
+
+    tcp_client_run = 0;
+    while(!thr_tcp_client.joinable());
+    if(thr_tcp_client.joinable()){
+        printf("Ending TCP server thread\n");
+        thr_tcp_client.join();
+    }
 
     UART = 0;
     while(!thr_01.joinable());

@@ -30,7 +30,7 @@ CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 CXXFLAGS += -g -Wall -Wformat
 CXXFLAGS += ${INCLUDE_DIRS}
 
-LIBS += -lglad -lglfw3 -lgdi32 -lopengl32 -limm32 -lpthread
+LIBS += -lglad -lglfw3 -lgdi32 -lopengl32    -limm32 -lpthread    -lws2_32 -lmswsock -ladvapi32
 LIBS += ${LIB_DIRS}
 
 ##---------------------------------------------------------------------
