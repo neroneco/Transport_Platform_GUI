@@ -44,12 +44,16 @@ enum Data_Names_enum {
     MPU9250_GYRO_X,
     MPU9250_GYRO_Y,
     MPU9250_GYRO_Z,
+    MPU9250_PITCH,
+    MPU9250_ROLL,
     MPU6886_ACCE_X,
     MPU6886_ACCE_Y,
     MPU6886_ACCE_Z,
     MPU6886_GYRO_X,
     MPU6886_GYRO_Y,
     MPU6886_GYRO_Z,
+    MPU6886_PITCH,
+    MPU6886_ROLL,
     PITCH_NO_FILTER,
     ROLL_NO_FILTER,
     PITCH_COMPLEMENTARY,
@@ -75,12 +79,16 @@ const char* Data_Names[] = {
     "mpu9250_gyro_x",
     "mpu9250_gyro_y",
     "mpu9250_gyro_z",
+    "mpu9250_pitch",
+    "mpu9250_roll",
     "mpu6886_acce_x",
     "mpu6886_acce_y",
     "mpu6886_acce_z",
     "mpu6886_gyro_x",
     "mpu6886_gyro_y",
     "mpu6886_gyro_z",
+    "mpu6886_pitch",
+    "mpu6886_roll",
     "pitch_no_filter",
     "roll_no_filter",
     "pitch_complementary",
@@ -99,10 +107,10 @@ enum Figures_Names {
     RAW_SENSORS
 };
 
-extern ScrollingBuffer sdata[28];
+extern ScrollingBuffer sdata[34];
 extern float t;
 
-extern bool Save_Data_Status[28];
+extern bool Save_Data_Status[34];
 extern bool Figures[3];
 
 void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_pack ) {
@@ -133,12 +141,16 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
                 scroll_data[MPU9250_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_x[iter]);
                 scroll_data[MPU9250_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_y[iter]);
                 scroll_data[MPU9250_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_z[iter]);
+                scroll_data[MPU9250_PITCH].AddPoint(time_real,        data_pack[packet_num].mpu9250_pitch[iter]);
+                scroll_data[MPU9250_ROLL].AddPoint(time_real,         data_pack[packet_num].mpu9250_roll[iter]);
                 scroll_data[MPU6886_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_x[iter]);
                 scroll_data[MPU6886_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_y[iter]);
                 scroll_data[MPU6886_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_z[iter]);
                 scroll_data[MPU6886_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_x[iter]);
                 scroll_data[MPU6886_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_y[iter]);
                 scroll_data[MPU6886_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_z[iter]);
+                scroll_data[MPU6886_PITCH].AddPoint(time_real,        data_pack[packet_num].mpu6886_pitch[iter]);
+                scroll_data[MPU6886_ROLL ].AddPoint(time_real,        data_pack[packet_num].mpu6886_roll[iter]);
                 scroll_data[PITCH_NO_FILTER].AddPoint(time_real,      data_pack[packet_num].pitch_no_filter[iter]);
                 scroll_data[ROLL_NO_FILTER].AddPoint(time_real,       data_pack[packet_num].roll_no_filter[iter]);
                 scroll_data[PITCH_COMPLEMENTARY].AddPoint(time_real,  data_pack[packet_num].pitch_complementary[iter]);
@@ -199,12 +211,16 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
             scroll_data[MPU9250_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_x[iter]);
             scroll_data[MPU9250_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_y[iter]);
             scroll_data[MPU9250_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu9250_gyro_z[iter]);
+            scroll_data[MPU9250_PITCH].AddPoint(time_real,        data_pack[packet_num].mpu9250_pitch[iter]);
+            scroll_data[MPU9250_ROLL].AddPoint(time_real,         data_pack[packet_num].mpu9250_roll[iter]);
             scroll_data[MPU6886_ACCE_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_x[iter]);
             scroll_data[MPU6886_ACCE_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_y[iter]);
             scroll_data[MPU6886_ACCE_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_acce_z[iter]);
             scroll_data[MPU6886_GYRO_X].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_x[iter]);
             scroll_data[MPU6886_GYRO_Y].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_y[iter]);
             scroll_data[MPU6886_GYRO_Z].AddPoint(time_real,       data_pack[packet_num].mpu6886_gyro_z[iter]);
+            scroll_data[MPU6886_PITCH].AddPoint(time_real,        data_pack[packet_num].mpu6886_pitch[iter]);
+            scroll_data[MPU6886_ROLL ].AddPoint(time_real,        data_pack[packet_num].mpu6886_roll[iter]);
             scroll_data[PITCH_NO_FILTER].AddPoint(time_real,      data_pack[packet_num].pitch_no_filter[iter]);
             scroll_data[ROLL_NO_FILTER].AddPoint(time_real,       data_pack[packet_num].roll_no_filter[iter]);
             scroll_data[PITCH_COMPLEMENTARY].AddPoint(time_real,  data_pack[packet_num].pitch_complementary[iter]);
@@ -330,6 +346,8 @@ void graphs_angles( ScrollingBuffer* sdata ) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
                 //ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
                 ImPlot::PlotLine("no filter", &sdata[PITCH_NO_FILTER].Data[0].x, &sdata[PITCH_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_PITCH].Data[0].x, &sdata[MPU9250_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_PITCH].Data[0].x, &sdata[MPU6886_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("complementary filter", &sdata[PITCH_COMPLEMENTARY].Data[0].x, &sdata[PITCH_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("alfa-beta filter", &sdata[PITCH_ALFA_BETA].Data[0].x, &sdata[PITCH_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("kalman filter", &sdata[PITCH_KALMAN].Data[0].x, &sdata[PITCH_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
@@ -345,6 +363,8 @@ void graphs_angles( ScrollingBuffer* sdata ) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
                 //ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
                 ImPlot::PlotLine("no filter", &sdata[ROLL_NO_FILTER].Data[0].x, &sdata[ROLL_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ROLL].Data[0].x, &sdata[MPU9250_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ROLL].Data[0].x, &sdata[MPU6886_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("complementary filter", &sdata[ROLL_COMPLEMENTARY].Data[0].x, &sdata[ROLL_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("alfa-beta filter", &sdata[ROLL_ALFA_BETA].Data[0].x, &sdata[ROLL_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("kalman filter", &sdata[ROLL_KALMAN].Data[0].x, &sdata[ROLL_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
@@ -452,7 +472,7 @@ void graphs_raw_sensors( ScrollingBuffer* sdata ) {
 
 void save_data_to_file( ScrollingBuffer* sdata )
 {
-    static bool Save_Data_Status[28];
+    static bool Save_Data_Status[34];
     ImGui::Checkbox("carts_pos_x",          &Save_Data_Status[CARTS_POS_X]);
     ImGui::Checkbox("carts_pos_y",          &Save_Data_Status[CARTS_POS_Y]);
     ImGui::Checkbox("carts_vel_x",          &Save_Data_Status[CARTS_VEL_X]);
@@ -465,12 +485,16 @@ void save_data_to_file( ScrollingBuffer* sdata )
     ImGui::Checkbox("mpu9250_gyro_x",       &Save_Data_Status[MPU9250_GYRO_X]);
     ImGui::Checkbox("mpu9250_gyro_y",       &Save_Data_Status[MPU9250_GYRO_Y]);
     ImGui::Checkbox("mpu9250_gyro_z",       &Save_Data_Status[MPU9250_GYRO_Z]);
+    ImGui::Checkbox("mpu9250_pitch",        &Save_Data_Status[MPU9250_PITCH]);
+    ImGui::Checkbox("mpu9250_roll",         &Save_Data_Status[MPU9250_ROLL]);
     ImGui::Checkbox("mpu6886_acce_x",       &Save_Data_Status[MPU6886_ACCE_X]);
     ImGui::Checkbox("mpu6886_acce_y",       &Save_Data_Status[MPU6886_ACCE_Y]);
     ImGui::Checkbox("mpu6886_acce_z",       &Save_Data_Status[MPU6886_ACCE_Z]);
     ImGui::Checkbox("mpu6886_gyro_x",       &Save_Data_Status[MPU6886_GYRO_X]);
     ImGui::Checkbox("mpu6886_gyro_y",       &Save_Data_Status[MPU6886_GYRO_Y]);
     ImGui::Checkbox("mpu6886_gyro_z",       &Save_Data_Status[MPU6886_GYRO_Z]);
+    ImGui::Checkbox("mpu6886_pitch",        &Save_Data_Status[MPU6886_PITCH]);
+    ImGui::Checkbox("mpu6886_roll",         &Save_Data_Status[MPU6886_ROLL]);
     ImGui::Checkbox("pitch_no_filter",      &Save_Data_Status[PITCH_NO_FILTER]);
     ImGui::Checkbox("roll_no_filter",       &Save_Data_Status[ROLL_NO_FILTER]);
     ImGui::Checkbox("pitch_complementary",  &Save_Data_Status[PITCH_COMPLEMENTARY]);
@@ -490,7 +514,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
         {
             no_data = 0;
             ImGui::LogToFile(-1,"data.txt");
-            for ( int k=0; k<28; k++ ) 
+            for ( int k=0; k<34; k++ ) 
             {
                 if ( Save_Data_Status[k] )
                 {
@@ -500,7 +524,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
             for (int i=0; i<sdata[CARTS_POS_X].Data.size();i++) 
             {
                 ImGui::LogText("\n");
-                for ( int k=0; k<28; k++ ) 
+                for ( int k=0; k<34; k++ ) 
                 {
                     if ( Save_Data_Status[k] )
                     {

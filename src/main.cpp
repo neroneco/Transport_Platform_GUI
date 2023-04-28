@@ -51,7 +51,7 @@ bool tcp_client_run         = 0 ;
 int waiting_packet_num = 0;
 
 
-ScrollingBuffer sdata[28];
+ScrollingBuffer sdata[34];
 float t;
 
 //bool Save_Data_Status[28];
