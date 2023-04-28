@@ -180,7 +180,7 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
             // Get start time
             auto start_time = std::chrono::steady_clock::now();
             // Get end time
-            auto end_time = start_time + std::chrono::microseconds(10000-(200*waiting_packet_num));
+            auto end_time = start_time + std::chrono::microseconds(5000-(10*waiting_packet_num));
 
             // Here happens the actual update stuff
             time_u64 += 10;
@@ -227,7 +227,7 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
             auto real_end_time_1 = std::chrono::steady_clock::now();
 
             while(std::chrono::duration_cast<std::chrono::microseconds>(end_time - std::chrono::steady_clock::now()).count() > 0) {
-                 std::this_thread::sleep_for(std::chrono::nanoseconds(100000));
+                 std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
             }
             auto real_end_time_2 = std::chrono::steady_clock::now();
             //const std::chrono::duration<double, std::milli> elapsed = real_end_time - start_time;

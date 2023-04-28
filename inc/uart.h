@@ -249,6 +249,13 @@ typedef struct {
     float mpu6886_gyro_x[100];
     float mpu6886_gyro_y[100];
     float mpu6886_gyro_z[100];
+
+    float mean_acce_x[100];
+    float mean_acce_y[100];
+    float mean_acce_z[100];
+    float mean_gyro_x[100];
+    float mean_gyro_y[100];
+    float mean_gyro_z[100];
 #endif
     float pitch_no_filter[100];
     float roll_no_filter[100];

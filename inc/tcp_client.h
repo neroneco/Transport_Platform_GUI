@@ -68,7 +68,7 @@ int init_tcp_client(SOCKET* ConnectSocket)
         return 1;
     }
 
-    DWORD OptVal = 3000;
+    DWORD OptVal = 5000;
     int   OptLen = sizeof (DWORD);
     iResult = setsockopt(*ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *) &OptVal, OptLen);
     if (iResult == SOCKET_ERROR) {
@@ -159,6 +159,7 @@ void tcp_client(void)
                     }
                 }
                 waiting_packet_num++;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
             tcp_client_run = 0;
