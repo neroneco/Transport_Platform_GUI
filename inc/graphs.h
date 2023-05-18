@@ -195,7 +195,7 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
             auto end_time = start_time + std::chrono::microseconds(5000-(10*waiting_packet_num));
 
             // Here happens the actual update stuff
-            time_u64 += 10;
+            time_u64 += 5;
             time_real = ((float)time_u64)*(0.001f);
             t = time_real;
 
