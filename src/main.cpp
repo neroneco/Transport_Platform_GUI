@@ -276,9 +276,9 @@ int main()
             ImGui::End();
 
             // Cart control window
-            ImGui::Begin("Cart Control",NULL,ImGuiWindowFlags_None);
+            ImGui::Begin("Cart Control Panel",NULL,ImGuiWindowFlags_None);
                 static int ctrl_mod = 0;
-                if (ImGui::Combo("Control mode", &ctrl_mod, "Automatic\0Manual\0"))
+                if (ImGui::Combo("Mode", &ctrl_mod, "Automatic\0Manual\0"))
                 {
                     switch (ctrl_mod)
                     {
@@ -287,103 +287,137 @@ int main()
                     }
                 }
                 if (ctrl_mod == 1) {
-                    ImGui::SeparatorText("Motor configuration");
-                    ImGui::SeparatorText("SPEED");
-                    static char buf_cart[66] = "";
-                    sprintf(buf_cart,"%d",x_cart_speed); 
-                    ImGui::InputText("cart X speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
-                    try {
-                        x_cart_speed = std::stoi(buf_cart);
-                    } catch(std::invalid_argument& e) {
-                        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
-                        x_cart_speed = 10;
-                    }
-                    sprintf(buf_cart,"%d",y_cart_speed);
-                    ImGui::InputText("cart Y speed [mm/s]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
-                    try {
-                        y_cart_speed = std::stoi(buf_cart);
-                    } catch(std::invalid_argument& e) {
-                        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
-                        y_cart_speed = 10;
-                    }
-                    if (ImGui::Button("X cart UPDATE SPEED",ImVec2(150,30)))
+                    static float x_pos;
+                    static float x_spd;
+                    static bool  x_en ;
+                    static float y_pos;
+                    static float y_spd;
+                    static bool  y_en ;
+
+                    ImGui::SeparatorText("X axis");
+                    static ImGuiTableFlags tab_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX;
+                    if (ImGui::BeginTable("table_mpu9250", 2, tab_flags))
                     {
-                        // do JOG + x direction
-                        msg_type   = MSG_SPEED;
-                        axis       = X;
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("X position");
+                        ImGui::TableNextColumn();
+
+                        static char x_buf_pos[10] = "0.0";
+                        ImGui::InputText("[mm]",x_buf_pos, 8, ImGuiInputTextFlags_CharsDecimal);
+                        try {
+                            x_pos = std::stof(x_buf_pos);
+                            if (x_pos > 165.0) {
+                                x_pos = 165.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Position only from range <-165, 165> [mm]");
+                            }
+                            if (x_pos < -165.0) {
+                                x_pos = -165.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Position only from range <-165, 165> [mm]");
+                            }
+                        } catch(std::invalid_argument& e) {
+                            ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                            x_pos = 0.0;
+                        }
+                        //ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", pos);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("X speed");
+                        ImGui::TableNextColumn();
+
+                        static char x_buf_spd[10] = "0.0";
+                        ImGui::InputText("[mm/s]",x_buf_spd, 8, ImGuiInputTextFlags_CharsDecimal);
+                        try {
+                            x_spd = std::stof(x_buf_spd);
+                            if ( x_spd > 200.0 ) {
+                                x_spd = 200.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Speed only from range <0, 200> [mm/s]");
+                            }
+                            if ((x_spd < 0.0)) {
+                                x_spd = 0.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Speed only from range <0, 200> [mm/s]");
+                            }
+                        } catch(std::invalid_argument& e) {
+                            ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                            x_spd = 0.0;
+                        }
+                        //ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", spd);
+                        ImGui::EndTable();
                     }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Y cart UPDATE SPEED",ImVec2(150,30)))
+                    ImGui::Checkbox("X Enable", &x_en);
+
+                    ImGui::SeparatorText("Y axis");
+                    if (ImGui::BeginTable("table_mpu9250", 2, tab_flags))
                     {
-                        // do JOG + x direction
-                        msg_type   = MSG_SPEED;
-                        axis       = Y;
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("Y position");
+                        ImGui::TableNextColumn();
+
+                        static char y_buf_pos[10] = "0.0";
+                        ImGui::InputText("[mm]",y_buf_pos, 8, ImGuiInputTextFlags_CharsDecimal);
+                        try {
+                            y_pos = std::stof(y_buf_pos);
+                            if (y_pos > 65.0) {
+                                y_pos = 65.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Position only from range <-65, 65> [mm]");
+                            }
+                            if (y_pos < -65.0) {
+                                y_pos = -65.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Position only from range <-65, 65> [mm]");
+                            }
+                        } catch(std::invalid_argument& e) {
+                            ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                            y_pos = 0.0;
+                        }
+                        //ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", pos);
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("Y speed");
+                        ImGui::TableNextColumn();
+
+                        static char y_buf_spd[10] = "0.0";
+                        ImGui::InputText("[mm/s]",y_buf_spd, 8, ImGuiInputTextFlags_CharsDecimal);
+                        try {
+                            y_spd = std::stof(y_buf_spd);
+                            if ( y_spd > 200.0 ) {
+                                y_spd = 200.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Speed only from range <0, 200> [mm/s]");
+                            }
+                            if ((y_spd < 0.0)) {
+                                y_spd = 0.0;
+                                ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Speed only from range <0, 200> [mm/s]");
+                            }
+                        } catch(std::invalid_argument& e) {
+                            ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
+                            y_spd = 0.0;
+                        }
+                        //ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784), "%.3f", spd);
+                        ImGui::EndTable();
                     }
-                    ImGui::SeparatorText("POSITION");
-                    sprintf(buf_cart,"%d",x_cart_pos); 
-                    ImGui::InputText("cart X position [mm]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
-                    try {
-                        x_cart_pos = std::stoi(buf_cart);
-                    } catch(std::invalid_argument& e) {
-                        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
-                        x_cart_pos = 215;
-                    }
-                    sprintf(buf_cart,"%d",y_cart_pos);
-                    ImGui::InputText("cart Y position [mm]",buf_cart, 64, ImGuiInputTextFlags_CharsDecimal);
-                    try {
-                        y_cart_pos = std::stoi(buf_cart);
-                    } catch(std::invalid_argument& e) {
-                        ImGui::TextColored(ImVec4(0.941, 0.0, 1.0, 0.784),"Not valid argument");
-                        y_cart_pos = 215;
-                    }
-                    if (ImGui::Button("X cart UPDATE POSITION",ImVec2(170,30)))
+                    ImGui::Checkbox("Y Enable", &y_en);
+
+                    ImGui::SeparatorText("GO");
+                    if (ImGui::Button("Accept"))
                     {
-                        // do JOG + x direction
-                        msg_type   = MSG_MOV;
-                        axis       = X;
+                        if (x_en){
+                            config_packet.x_en       = ENABLED ;
+                        } else {
+                            config_packet.x_en       = DISABLED ;
+                        }
+                        if (y_en){
+                            config_packet.y_en       = ENABLED ;
+                        } else {
+                            config_packet.y_en       = DISABLED ;
+                        }
+                        config_packet.x_position = x_pos;
+                        config_packet.x_velocity = x_spd;
+                        config_packet.y_position = y_pos;
+                        config_packet.y_velocity = y_spd;
                     }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Y cart UPDATE POSITION",ImVec2(170,30)))
-                    {
-                        // do JOG + x direction
-                        msg_type   = MSG_MOV;
-                        axis       = Y;
-                    }
-                    ImGui::SeparatorText("JOG");
-                    if (ImGui::Button("JOG + x",ImVec2(70,30)))
-                    {
-                        // do JOG + x direction
-                        msg_type   = MSG_JOG;
-                        direction  = POSITIV;
-                        axis       = X;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("JOG - x",ImVec2(70,30)))
-                    {
-                        // do JOG - x direction
-                        msg_type   = MSG_JOG;
-                        direction  = NEGATIV;
-                        axis       = X;
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("X direction");
-                    if (ImGui::Button("JOG + y",ImVec2(70,30)))
-                    {
-                        // do JOG + y direction
-                        msg_type   = MSG_JOG;
-                        direction  = POSITIV;
-                        axis       = Y;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("JOG - y",ImVec2(70,30)))
-                    {
-                        // do JOG - y direction
-                        msg_type   = MSG_JOG;
-                        direction  = NEGATIV;
-                        axis       = Y;
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("y direction");
+
                 }
             ImGui::End();
 

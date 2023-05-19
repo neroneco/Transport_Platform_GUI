@@ -103,8 +103,30 @@ typedef struct {
     char n4;
 } test_buf_struct;
 
+typedef struct {
+    int x_en;
+    int y_en;
+    float x_position;
+    float y_position;
+    float x_velocity;
+    float y_velocity;
+} config_packet_struct;
+
 test_buf_struct recv_test_buf = {0};
 test_buf_struct send_test_buf = {.n1='a', .n2='b', .n3='c', .n4='d'};
+
+enum STEPPER_STATUS{
+    ENABLED,
+    DISABLED
+};
+
+config_packet_struct config_packet = { .x_en        = DISABLED,
+                                       .y_en        = DISABLED, 
+                                       .x_position  = 0.0,
+                                       .y_position  = 0.0,
+                                       .x_velocity  = 0.0,
+                                       .y_velocity  = 0.0 
+                                     };
 
 
 extern bool tcp_client_run        ;
@@ -127,12 +149,25 @@ void tcp_client(void)
 
             while ( tcp_client_run ) {
 
-                iResult = send( socket_client, (char*)&send_test_buf, sizeof(test_buf_struct), 0 );
+                iResult = send( socket_client, (char*)&config_packet, sizeof(config_packet_struct), 0 );
                 if (iResult == SOCKET_ERROR) {
                     printf("send failed with error: %d\n", WSAGetLastError());
                     WSACleanup();
                     break;
                 }
+                printf("\
+                  sent: x_pos: %.3f \n\
+                        x_spd: %.3f \n\
+                        x_en: %d \n\
+                        y_pos: %.3f \n\
+                        y_spd: %.3f \n\
+                        y_en: %d \n", 
+                        config_packet.x_position,
+                        config_packet.x_velocity,
+                        config_packet.x_en,
+                        config_packet.y_position,
+                        config_packet.y_velocity,
+                        config_packet.y_en);
 
                 static int packet_num = 0;
                 iResult = recv(socket_client, (char*)&Data_Packet[packet_num], sizeof(data_packet_struct), 0);
