@@ -229,7 +229,9 @@ typedef struct {
 
 typedef struct {
     system_status_struct sytem_status;
+    float carts_pos_adc_x[100];
     float carts_pos_x[100];
+    float carts_pos_adc_y[100];
     float carts_pos_y[100];
     float carts_vel_x[100];
     float carts_vel_y[100];

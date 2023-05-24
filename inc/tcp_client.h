@@ -103,7 +103,13 @@ typedef struct {
     char n4;
 } test_buf_struct;
 
+enum control_mode {
+    AUTO,
+    MANUAL
+};
+
 typedef struct {
+    int mode;
     int x_en;
     int y_en;
     float x_position;

@@ -293,6 +293,7 @@ int main()
                     static float y_pos;
                     static float y_spd;
                     static bool  y_en ;
+                    static bool motor_mode;
 
                     ImGui::SeparatorText("X axis");
                     static ImGuiTableFlags tab_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX;
@@ -400,8 +401,14 @@ int main()
                     ImGui::Checkbox("Y Enable", &y_en);
 
                     ImGui::SeparatorText("GO");
+                    ImGui::Checkbox("Regulate", &motor_mode);
                     if (ImGui::Button("Accept"))
                     {
+                        if (motor_mode){
+                            config_packet.mode = AUTO;
+                        } else {
+                            config_packet.mode = MANUAL;
+                        }
                         if (x_en){
                             config_packet.x_en       = ENABLED ;
                         } else {

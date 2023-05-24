@@ -10,7 +10,7 @@ struct ScrollingBuffer {
     int MaxSize;
     int Offset;
     ImVector<ImVec2> Data;
-    ScrollingBuffer(int max_size = (7500)) {
+    ScrollingBuffer(int max_size = (15000)) {
         MaxSize = max_size;
         Offset  = 0;
         Data.reserve(MaxSize);
@@ -32,7 +32,9 @@ struct ScrollingBuffer {
 };
 
 enum Data_Names_enum {
+    CARTS_POS_ADC_X,
     CARTS_POS_X,
+    CARTS_POS_ADC_Y,
     CARTS_POS_Y,
     CARTS_VEL_X,
     CARTS_VEL_Y,
@@ -67,7 +69,9 @@ enum Data_Names_enum {
 };
 
 const char* Data_Names[] = {
+    "carts_pos_adc_x",
     "carts_pos_x",
+    "carts_pos_adc_y",
     "carts_pos_y",
     "carts_vel_x",
     "carts_vel_y",
@@ -129,7 +133,9 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
                 time_real = ((float)time_u64)*(0.001f);
                 t = time_real;
 
+                scroll_data[CARTS_POS_ADC_X].AddPoint(time_real,      data_pack[packet_num].carts_pos_adc_x[iter]);
                 scroll_data[CARTS_POS_X].AddPoint(time_real,          data_pack[packet_num].carts_pos_x[iter]);
+                scroll_data[CARTS_POS_ADC_Y].AddPoint(time_real,      data_pack[packet_num].carts_pos_adc_y[iter]);
                 scroll_data[CARTS_POS_Y].AddPoint(time_real,          data_pack[packet_num].carts_pos_y[iter]);
                 scroll_data[CARTS_VEL_X].AddPoint(time_real,          data_pack[packet_num].carts_vel_x[iter]);
                 scroll_data[CARTS_VEL_Y].AddPoint(time_real,          data_pack[packet_num].carts_vel_y[iter]);
@@ -199,7 +205,9 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
             time_real = ((float)time_u64)*(0.001f);
             t = time_real;
 
+            scroll_data[CARTS_POS_ADC_X].AddPoint(time_real,      data_pack[packet_num].carts_pos_adc_x[iter]);
             scroll_data[CARTS_POS_X].AddPoint(time_real,          data_pack[packet_num].carts_pos_x[iter]);
+            scroll_data[CARTS_POS_ADC_Y].AddPoint(time_real,      data_pack[packet_num].carts_pos_adc_y[iter]);
             scroll_data[CARTS_POS_Y].AddPoint(time_real,          data_pack[packet_num].carts_pos_y[iter]);
             scroll_data[CARTS_VEL_X].AddPoint(time_real,          data_pack[packet_num].carts_vel_x[iter]);
             scroll_data[CARTS_VEL_Y].AddPoint(time_real,          data_pack[packet_num].carts_vel_y[iter]);
@@ -286,7 +294,9 @@ void graphs_carts( ScrollingBuffer* scroll_data ) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 365);
                 //ImPlot::SetNextLineStyle(ImVec4(1.000, 0.0, 0.0, 0.784),2.0);
                 ImPlot::PlotLine("Cart X", &scroll_data[CARTS_POS_X].Data[0].x, &scroll_data[CARTS_POS_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("Cart X ADC", &scroll_data[CARTS_POS_ADC_X].Data[0].x, &scroll_data[CARTS_POS_ADC_X].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("Cart Y", &scroll_data[CARTS_POS_Y].Data[0].x, &scroll_data[CARTS_POS_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
+                ImPlot::PlotLine("Cart Y ADC", &scroll_data[CARTS_POS_ADC_Y].Data[0].x, &scroll_data[CARTS_POS_ADC_Y].Data[0].y, scroll_data[PITCH].Data.size(), 0, scroll_data[PITCH].Offset, 2*sizeof(float));
                 ImPlot::EndPlot();
             }
         }
@@ -346,8 +356,8 @@ void graphs_angles( ScrollingBuffer* sdata ) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
                 //ImPlot::SetNextLineStyle(ImVec4(0.941, 0.0, 1.0, 0.784),2.0);
                 ImPlot::PlotLine("no filter", &sdata[PITCH_NO_FILTER].Data[0].x, &sdata[PITCH_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_PITCH].Data[0].x, &sdata[MPU9250_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_PITCH].Data[0].x, &sdata[MPU6886_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                //ImPlot::PlotLine("mpu9250", &sdata[MPU9250_PITCH].Data[0].x, &sdata[MPU9250_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                //ImPlot::PlotLine("mpu6886", &sdata[MPU6886_PITCH].Data[0].x, &sdata[MPU6886_PITCH].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("complementary filter", &sdata[PITCH_COMPLEMENTARY].Data[0].x, &sdata[PITCH_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("alfa-beta filter", &sdata[PITCH_ALFA_BETA].Data[0].x, &sdata[PITCH_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("kalman filter", &sdata[PITCH_KALMAN].Data[0].x, &sdata[PITCH_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
@@ -363,8 +373,8 @@ void graphs_angles( ScrollingBuffer* sdata ) {
                 ImPlot::SetupAxisLimits(ImAxis_Y1,-180,180);
                 //ImPlot::SetNextLineStyle(ImVec4(0.447, 0.604, 0.452, 0.784),2.0);
                 ImPlot::PlotLine("no filter", &sdata[ROLL_NO_FILTER].Data[0].x, &sdata[ROLL_NO_FILTER].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-                ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ROLL].Data[0].x, &sdata[MPU9250_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
-                ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ROLL].Data[0].x, &sdata[MPU6886_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                //ImPlot::PlotLine("mpu9250", &sdata[MPU9250_ROLL].Data[0].x, &sdata[MPU9250_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
+                //ImPlot::PlotLine("mpu6886", &sdata[MPU6886_ROLL].Data[0].x, &sdata[MPU6886_ROLL].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("complementary filter", &sdata[ROLL_COMPLEMENTARY].Data[0].x, &sdata[ROLL_COMPLEMENTARY].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("alfa-beta filter", &sdata[ROLL_ALFA_BETA].Data[0].x, &sdata[ROLL_ALFA_BETA].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
                 ImPlot::PlotLine("kalman filter", &sdata[ROLL_KALMAN].Data[0].x, &sdata[ROLL_KALMAN].Data[0].y, sdata[PITCH].Data.size(), 0, sdata[PITCH].Offset, 2*sizeof(float));
@@ -473,7 +483,9 @@ void graphs_raw_sensors( ScrollingBuffer* sdata ) {
 void save_data_to_file( ScrollingBuffer* sdata )
 {
     static bool Save_Data_Status[34];
+    ImGui::Checkbox("carts_pos_adc_x",      &Save_Data_Status[CARTS_POS_ADC_X]);
     ImGui::Checkbox("carts_pos_x",          &Save_Data_Status[CARTS_POS_X]);
+    ImGui::Checkbox("carts_pos_adc_y",      &Save_Data_Status[CARTS_POS_ADC_Y]);
     ImGui::Checkbox("carts_pos_y",          &Save_Data_Status[CARTS_POS_Y]);
     ImGui::Checkbox("carts_vel_x",          &Save_Data_Status[CARTS_VEL_X]);
     ImGui::Checkbox("carts_vel_y",          &Save_Data_Status[CARTS_VEL_Y]);
@@ -510,7 +522,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
     static bool no_data;
     if (ImGui::Button("Save data to file"))
     {
-        if(sdata[CARTS_POS_X].Data.size()!=0)
+        if(sdata[CARTS_POS_ADC_X].Data.size()!=0)
         {
             no_data = 0;
             ImGui::LogToFile(-1,"data.txt");
@@ -521,7 +533,7 @@ void save_data_to_file( ScrollingBuffer* sdata )
                     ImGui::LogText("%s\t",Data_Names[k]);
                 }
             }
-            for (int i=0; i<sdata[CARTS_POS_X].Data.size();i++) 
+            for (int i=0; i<sdata[CARTS_POS_ADC_X].Data.size();i++) 
             {
                 ImGui::LogText("\n");
                 for ( int k=0; k<34; k++ ) 
