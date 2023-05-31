@@ -33,11 +33,11 @@ It visualizes in real time actual state and parameters of whole system.
 
 ## Instalation
 
-(mingw C++ compiler and make needed)
+(mingw C++ compiler and `make` needed)
 * Download [Dear ImGui](https://github.com/ocornut/imgui/tree/master/backends) libries for glfw and opengl development
 * Generate [GLAD](https://gen.glad.sh/) file from
 * Download [GLFW](https://github.com/glfw/glfw) libriers file
-* in Makefile change:
-    - INCLUDE_DIRS to GLFW and GLAD include path
-    - IMGUI_DIR to Dear Imgui include path
-* Run make
+* in `Makefile` change:
+    - `INCLUDE_DIRS` to GLFW and GLAD include path
+    - `IMGUI_DIR` to Dear Imgui include path
+* Run `make`
