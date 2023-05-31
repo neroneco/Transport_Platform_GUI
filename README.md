@@ -16,11 +16,11 @@ It visualizes in real time actual state and parameters of whole system.
 ---
 
 ## Files
-* src/main.cpp -> window init
-* inc/tcp_client.h -> tcp client and data storage
-* inc/uart.h -> uart communictaion and data storage (alternative if tcp client doesn't work)
-* inc/graphs.h -> data visualization and archivization
-* inc/linmath.h -> implementation of linear-algebra functions [GLFW linmath.h](https://github.com/glfw/glfw/blob/master/deps/linmath.h)
+* `src/main.cpp` -> window init
+* `inc/tcp_client.h` -> tcp client and data storage
+* `inc/uart.h` -> uart communictaion and data storage (alternative if tcp client doesn't work)
+* `inc/graphs.h` -> data visualization and archivization
+* `inc/linmath.h` -> implementation of linear-algebra functions [GLFW linmath.h](https://github.com/glfw/glfw/blob/master/deps/linmath.h)
 
 ---
 
