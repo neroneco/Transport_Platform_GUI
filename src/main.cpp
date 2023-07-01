@@ -40,7 +40,7 @@ system_status_struct    System_Status_Data  = {0};
 bool end_thread_01 = 0 ;
 bool end_thread_02 = 0 ;
 bool UART = 0 ;
-char* device = "\\\\.\\COM3" ;
+const char* device = "\\\\.\\COM3" ;
 uint32_t baud_rate = 900000  ;
 
 // TCP/IP

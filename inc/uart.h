@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <winsock2.h>
 #include <windows.h>
 
 
@@ -297,7 +298,7 @@ extern uint32_t y_cart_pos ;
 
 extern bool end_thread_01 ;
 extern bool UART          ;
-extern char* device       ;
+extern const char* device       ;
 extern uint32_t baud_rate ;
 
 extern bool     direction ;
@@ -314,7 +315,6 @@ extern system_status_struct     System_Status_Data ;
 void UART_communication(void)
 {
     static uint8_t buf[10];
-    static int seconds = 10;
     while(!end_thread_01){
         if(UART){
         
@@ -416,7 +416,7 @@ void UART_communication(void)
                 static int packet_num = 0;
                 int data_read = read_port( port, (uint8_t*)&Data_Packet[packet_num], sizeof(data_packet_struct) );
                 if( data_read != sizeof(data_packet_struct) ){
-                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %d\n",data_read,sizeof(data_packet_struct));
+                    printf("Error in READ from serial port 1:\n data read: %d\n packet length: %llu\n", data_read, sizeof(data_packet_struct));
                     UART = 0;
                     break;
                 } else {

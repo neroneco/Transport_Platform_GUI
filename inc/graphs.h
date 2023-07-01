@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <winsock2.h>
 #include <windows.h>
 
 // utility structure for realtime plot
@@ -121,7 +122,6 @@ void graphs_store_data( ScrollingBuffer *scroll_data, data_packet_struct* data_p
 
     static int iter = 0;
     static int packet_num = 0;
-    static int seconds = 10;
     static uint64_t time_u64 = 0;
     static float time_real = 0;
 
@@ -248,12 +248,12 @@ void graphs_store_data_thread( ScrollingBuffer *scroll_data, data_packet_struct*
                 packet_num %= 10;
             }
             // Sleep if necessary
-            auto real_end_time_1 = std::chrono::steady_clock::now();
+            //auto real_end_time_1 = std::chrono::steady_clock::now();
 
             while(std::chrono::duration_cast<std::chrono::microseconds>(end_time - std::chrono::steady_clock::now()).count() > 0) {
                  std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
             }
-            auto real_end_time_2 = std::chrono::steady_clock::now();
+            //auto real_end_time_2 = std::chrono::steady_clock::now();
             //const std::chrono::duration<double, std::milli> elapsed = real_end_time - start_time;
             //std::cout << "Elapsed 1: " << std::chrono::duration_cast<std::chrono::microseconds>(real_end_time_1 - start_time).count() << "us \n";
             //std::cout << "Elapsed 2: " << std::chrono::duration_cast<std::chrono::microseconds>(real_end_time_2 - real_end_time_1).count() << "us \n";

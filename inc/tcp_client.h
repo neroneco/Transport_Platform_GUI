@@ -3,8 +3,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,7 +17,6 @@ int init_tcp_client(SOCKET* ConnectSocket)
     struct addrinfo *result = NULL,
                     *ptr = NULL,
                     hints;
-    const char *sendbuf = "this is a test";
     int iResult;
 
     // Initialize Winsock
@@ -178,7 +177,7 @@ void tcp_client(void)
                 static int packet_num = 0;
                 iResult = recv(socket_client, (char*)&Data_Packet[packet_num], sizeof(data_packet_struct), 0);
                 if ( iResult > 0 ) {
-                    printf("Bytes received / expected : %d / %d \n", iResult, sizeof(data_packet_struct));
+                    printf("Bytes received / expected : %d / %llu \n", iResult, sizeof(data_packet_struct));
                     if ( iResult != sizeof(data_packet_struct) ) {
                         break;
                     }
